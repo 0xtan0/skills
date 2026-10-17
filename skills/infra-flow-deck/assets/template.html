@@ -1,0 +1,377 @@
+<title>Dromos Keeper System</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+:root{
+  --bg:#f6f7f9;--panel:#ffffff;--ink:#16191f;--muted:#5b6472;--line:#aab2bf;--soft:#e7eaef;
+  --acct:#7a8494;--sec:#DD344C;--chain:#4f5fb8;--chainbg:#eef0fb;--accent:#ED7100;--good:#0ca30c;--warn:#b07a00;--crit:#d03b3b;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1218;--panel:#171b23;--ink:#eef1f5;--muted:#a3abb8;--line:#5a6372;--soft:#232935;
+  --acct:#8d97a8;--sec:#ff5c73;--chain:#8e9cf0;--chainbg:#1c2135;--accent:#ff9a3d;--warn:#fab219;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1218;--panel:#171b23;--ink:#eef1f5;--muted:#a3abb8;--line:#5a6372;--soft:#232935;
+  --acct:#8d97a8;--sec:#ff5c73;--chain:#8e9cf0;--chainbg:#1c2135;--accent:#ff9a3d;--warn:#fab219;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;overflow:hidden}
+.deck{height:100vh;height:100dvh;display:flex;flex-direction:column;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.slide{display:none;flex:1;min-height:0;flex-direction:column;justify-content:center;max-width:1280px;width:100%;margin:0 auto;padding:20px 0 8px}
+.slide.on{display:flex}
+h1{font-size:clamp(36px,6vw,68px);margin:0 0 16px;letter-spacing:-.02em;line-height:1.05}
+h2{font-size:clamp(24px,3vw,36px);margin:0 0 12px;letter-spacing:-.01em}
+.lead{font-size:clamp(18px,2.2vw,26px);color:var(--muted);margin:0;max-width:760px;line-height:1.4}
+.kicker{font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:16px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+.dia{flex:1;min-height:0;overflow-x:auto;overflow-y:hidden}
+.dia svg{display:block;height:100%;width:100%;min-width:900px;max-height:68vh}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+button{font:inherit;font-size:16px;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:9px 16px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.cap{min-height:62px;font-size:clamp(17px,2vw,22px);line-height:1.35;margin-top:10px;padding:10px 16px;border-left:4px solid var(--accent);background:var(--panel);border-radius:4px}
+.cap b{font-family:'IBM Plex Mono',monospace;color:var(--accent);margin-right:10px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:10px 0 max(12px,env(safe-area-inset-bottom,0px));max-width:1280px;width:100%;margin:0 auto;color:var(--muted);font-size:16px}
+nav div{display:flex;gap:8px}
+.safe{list-style:none;padding:0;margin:20px 0 0;display:grid;gap:18px}
+.safe li{font-size:clamp(19px,2.4vw,28px);padding:16px 20px;background:var(--panel);border-radius:10px;border-left:6px solid var(--sec)}
+.safe li span{color:var(--muted);display:block;font-size:.65em;margin-top:4px}
+/* svg */
+svg text{fill:var(--ink);font-family:'IBM Plex Sans',sans-serif}
+.lbl{font-size:18px;font-weight:600}
+.sub{font-size:16px;fill:var(--muted)}
+.acc{fill:none;stroke:var(--acct);stroke-width:2;stroke-dasharray:8 6}
+.acc.sec{stroke:var(--sec)}
+.acct-t{font-size:16px;font-weight:600;fill:var(--muted)}
+.acct-t.sec{fill:var(--sec)}
+.grp{fill:none;stroke:#E7157B;stroke-width:2;stroke-dasharray:4 4}
+.chainbox{fill:var(--chainbg);stroke:var(--chain);stroke-width:2}
+.arr{fill:none;stroke:var(--line);stroke-width:2.5;marker-end:url(#ah)}
+.node,.arr{transition:opacity .3s}
+.playing .node,.playing .arr{opacity:.28}
+.playing .node.hot,.playing .arr.hot{opacity:1}
+.arr.hot{stroke:var(--accent);stroke-width:4;marker-end:url(#ahot);stroke-dasharray:10 6;animation:flow .8s linear infinite}
+.node.hot rect.tile{stroke:var(--accent)!important;stroke-width:5}
+@keyframes flow{to{stroke-dashoffset:-16}}
+.mon{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:3 5;marker-end:url(#ah)}
+.chip{fill:var(--soft)}
+.chiptx{font-size:17px}
+.deploy{fill:none;stroke:var(--ink);stroke-width:2.5;marker-end:url(#ah2)}
+.deny{fill:none;stroke:var(--sec);stroke-width:2.5;stroke-dasharray:7 5;marker-end:url(#ahdeny)}
+.arr.deny.hot{stroke:var(--sec);marker-end:url(#ahdeny)}
+.uses{fill:none;stroke:var(--sec);stroke-width:2;stroke-dasharray:5 5;marker-end:url(#ah3)}
+.reg{fill:none;stroke:#00A4A6;stroke-width:1.5;stroke-dasharray:3 4}
+.regt{font-size:16px;font-weight:600;fill:#00A4A6}
+.mx-wrap{flex:1;min-height:0;overflow:auto}
+.mx{border-collapse:separate;border-spacing:0 4px;width:100%;min-width:1100px;font-size:15px;line-height:1.3}
+.mx th,.mx td{text-align:left;vertical-align:top;padding:7px 10px;background:var(--panel)}
+.mx thead th{background:none;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.mx tbody th{font-weight:600;white-space:nowrap;border-radius:6px 0 0 6px}
+.mx tbody th span{display:block;font-weight:400;color:var(--muted);font-size:14px}
+.mx td:last-child{border-radius:0 6px 6px 0}
+.mx td b{display:inline-block;width:1.3em;font-weight:700}
+.st-g b{color:var(--good)}.st-w b{color:var(--warn)}.st-c b{color:var(--crit)}
+.mx td.st-c{box-shadow:inset 3px 0 0 var(--crit)}
+.mx-foot{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted);font-size:15px;margin:10px 0 0}
+.deny-chip{fill:none;stroke:var(--sec);stroke-width:2}
+.node.hot .chip{stroke:var(--accent);stroke-width:3}
+.repo{fill:var(--panel);stroke:var(--ink);stroke-width:2}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:16px;fill:var(--muted)}
+@media (prefers-reduced-motion: reduce){.arr.hot{animation:none;stroke-dasharray:none}.node,.arr{transition:none}}
+@media (max-width:640px){.dia svg{min-width:820px}}
+</style>
+
+<div class="deck">
+  <section class="slide on" aria-label="Title">
+    <div class="kicker">Dromos · Operations</div>
+    <h1>Dromos Keeper System</h1>
+    <p class="lead">How a keeper run goes from a schedule to the chain. Where each part lives.</p>
+  </section>
+
+  <section class="slide" aria-label="How a keeper run works">
+    <h2>How a keeper run works</h2>
+    <div class="dia"><svg id="flow" viewBox="0 0 1280 720" role="img" aria-label="Keeper run flow diagram"></svg></div>
+    <div class="ctrl">
+      <button class="primary" id="play">&#9654; Play</button>
+      <button id="back">Step back</button>
+      <button id="next">Step next</button>
+      <button id="reset">Reset</button>
+    </div>
+    <div class="cap" id="cap" aria-live="polite">Press Play to see one keeper run, step by step.</div>
+  </section>
+
+  <!-- Network slide: uncomment, fill #net and its nsteps in the script.
+  <section class="slide" aria-label="How traffic moves through the network">
+    <h2>How traffic moves through the network</h2>
+    <div class="dia"><svg id="net" viewBox="0 0 1280 880" role="img" aria-label="..."></svg></div>
+    <div class="ctrl">
+      <button class="primary" id="nplay">&#9654; Play</button>
+      <button id="nback">Step back</button>
+      <button id="nnext">Step next</button>
+      <button id="nreset">Reset</button>
+    </div>
+    <div class="cap" id="ncap" aria-live="polite">Press Play to follow traffic in and out of the VPC.</div>
+  </section>
+  -->
+
+  <!-- IAM slide: uncomment, fill #iam and its isteps; player('iam','i',isteps,'...').
+       A critical policy is <path class="arr deny" id="..."> so the Play can light it.
+  <section class="slide" aria-label="Main IAM roles">
+    <h2>Who can do what: main IAM roles</h2>
+    <div class="dia"><svg id="iam" viewBox="0 0 1280 820" role="img" aria-label="..."></svg></div>
+    <div class="ctrl">
+      <button class="primary" id="iplay">&#9654; Play</button>
+      <button id="iback">Step back</button>
+      <button id="inext">Step next</button>
+      <button id="ireset">Reset</button>
+    </div>
+    <div class="cap" id="icap" aria-live="polite">Press Play to see who can assume each role.</div>
+  </section>
+  -->
+
+  <!-- Release slide: uncomment, fill #rel and rsteps; player('rel','r',rsteps,'...').
+       Branch tiles use glyph 'branch' with labels above (side 't'); account tiles use 'cloud'.
+  <section class="slide" aria-label="How a change reaches prod">
+    <h2>How a change reaches prod</h2>
+    <div class="dia"><svg id="rel" viewBox="0 0 1280 760" role="img" aria-label="..."></svg></div>
+    <div class="ctrl">
+      <button class="primary" id="rplay">&#9654; Play</button>
+      <button id="rback">Step back</button>
+      <button id="rnext">Step next</button>
+      <button id="rreset">Reset</button>
+    </div>
+    <div class="cap" id="rcap" aria-live="polite">Press Play to follow one change from a branch to prod.</div>
+  </section>
+  -->
+
+  <!-- Matrix slide: uncomment, one <tr> per store. A cell is
+       <td class="st-w" title="Source: file:line"><b aria-label="Partial">&#9680;</b>text</td>
+       (st-g &#10003; Strong, st-w &#9680; Partial, st-c &#10005; Gap).
+  <section class="slide" aria-label="Where the data lives">
+    <h2>Where the data lives</h2>
+    <div class="mx-wrap"><table class="mx">
+      <thead><tr><th>Store</th><th>Encryption</th><th>Retention</th><th>Availability</th><th>Exposure</th><th>Who can read the data</th><th>Audit</th></tr></thead>
+      <tbody>
+        <tr><th>Database<span>technology</span></th>
+          <td class="st-g" title="Source: file:line"><b aria-label="Strong">&#10003;</b>text</td>
+          <td class="st-w" title="Source: file:line"><b aria-label="Partial">&#9680;</b>text</td>
+          <td class="st-c" title="Source: file:line"><b aria-label="Gap">&#10005;</b>text</td>
+          <td></td><td></td><td></td></tr>
+      </tbody>
+    </table></div>
+    <p class="mx-foot"><span>&#10003; strong</span><span>&#9680; partial</span><span>&#10005; gap</span><span>Cross-cutting gaps: ...</span></p>
+  </section>
+  -->
+
+  <section class="slide" aria-label="AWS accounts and repos">
+    <h2>Production: AWS accounts, regions and repos</h2>
+    <div class="dia"><svg id="accts" viewBox="0 0 1280 660" role="img" aria-label="AWS accounts and repositories diagram"></svg></div>
+  </section>
+
+  <section class="slide" aria-label="Safety points">
+    <h2>Key safety points</h2>
+    <ul class="safe">
+      <li>Signing keys stay in AWS KMS. <span>Only the signature leaves KMS.</span></li>
+      <li>The keys are in a separate security account. <span>The keeper account cannot export or change them.</span></li>
+      <li>The paymaster pays the gas. <span>It checks each request again before it sends. One keeper also holds funds to pay the Hyperlane cross-chain fee.</span></li>
+            <li>Staging only simulates. <span>It sends the actions to Slack for review. It does not send transactions.</span></li>
+    </ul>
+  </section>
+
+  <nav>
+    <span id="count">1 / 4</span>
+    <div><button id="prev" aria-label="Previous slide">&larr; Prev</button><button id="fwd" aria-label="Next slide">Next &rarr;</button></div>
+  </nav>
+</div>
+
+<script>
+const W='fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"';
+const G={
+ clock:'<circle cx="40" cy="40" r="20" fill="none" stroke="#fff" stroke-width="4"/><path d="M40 28v13l9 6" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
+ ecs:'<g fill="none" stroke="#fff" stroke-width="3.5"><rect x="18" y="26" width="16" height="28"/><rect x="32" y="22" width="16" height="36"/><rect x="46" y="26" width="16" height="28"/></g>',
+ ssm:'<g stroke="#fff" stroke-width="4" stroke-linecap="round"><path d="M20 28h40M20 40h40M20 52h40"/></g><g fill="#fff"><circle cx="30" cy="28" r="5"/><circle cx="50" cy="40" r="5"/><circle cx="36" cy="52" r="5"/></g>',
+ kms:'<circle cx="30" cy="40" r="11" fill="none" stroke="#fff" stroke-width="4"/><path d="M41 40h22M55 40v9M62 40v7" stroke="#fff" stroke-width="4" stroke-linecap="round"/>',
+ sqs:'<g fill="none" stroke="#fff" stroke-width="3.5"><rect x="16" y="30" width="14" height="20"/><rect x="33" y="30" width="14" height="20"/><rect x="50" y="30" width="14" height="20"/></g>',
+ lambda:'<text x="40" y="56" text-anchor="middle" font-size="46" font-weight="700" style="fill:#fff">&#955;</text>',
+ rpc:'<g fill="none" stroke="#fff" stroke-width="3.5"><circle cx="40" cy="40" r="20"/><ellipse cx="40" cy="40" rx="9" ry="20"/><path d="M20 40h40"/></g>',
+ hash:'<path d="M33 22l-6 36M51 22l-6 36M22 34h38M20 48h38" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>',
+ slack:'<g transform="translate(14 14) scale(0.0494) translate(-434 -14)"><rect x="434" y="290" width="498" height="221" rx="110.5" fill="#36C5F0"/><path d="M932 235H821.5A110.5 110.5 0 1 1 932 124.5Z" fill="#36C5F0"/><rect x="989" y="14" width="220" height="497" rx="110" fill="#2EB67D"/><path d="M1266 511V400.5A110.5 110.5 0 1 1 1376.5 511Z" fill="#2EB67D"/><rect x="989" y="568" width="497" height="221" rx="110.5" fill="#ECB22E"/><path d="M989 845H1098.5A110.5 110.5 0 1 1 989 955.5Z" fill="#ECB22E"/><rect x="711" y="568" width="221" height="498" rx="110.5" fill="#E01E5A"/><path d="M655 568V678.5A110.5 110.5 0 1 1 544.5 568Z" fill="#E01E5A"/></g>',
+ cube:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round"><path d="M40 18l20 11v22L40 62 20 51V29z"/><path d="M20 29l20 11 20-11M40 40v22"/></g>',
+ target:'<g fill="none" stroke="#fff" stroke-width="3.5"><circle cx="40" cy="40" r="20"/><circle cx="40" cy="40" r="9"/></g><circle cx="40" cy="40" r="3" fill="#fff"/>',
+ /* brands: real logos for non-cloud services. These are white, so the tile takes the brand colour:
+    github #24292f, vercel #000000, discord #5865F2, pagerduty #06AC38. slack is in colour: tile #ffffff. */
+ github:'<g transform="translate(16 16) scale(2)"><path fill="#fff" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></g>',
+ vercel:'<path d="M40 22l21 36H19z" fill="#fff"/>',
+ discord:'<g transform="translate(16 18) scale(2)"><path fill="#fff" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></g>',
+ pagerduty:'<path d="M28 20h14c9 0 15 5 15 13s-6 13-15 13h-6v14h-8zM36 27v12h6c4 0 7-2 7-6s-3-6-7-6z" fill="#fff" fill-rule="evenodd"/>',
+ brain:`<g ${W}><path d="M26 30l14-10 14 10v20L40 60 26 50zM40 20v40M26 30l28 20M54 30L26 50"/></g><g fill="#fff"><circle cx="40" cy="40" r="4"/></g>`,
+ cloud:`<g ${W}><path d="M27 54h28a10 10 0 0 0 1-20 14 14 0 0 0-27-3 11 11 0 0 0-2 23z"/></g>`,
+ /* networking (Networking & CDN #8C4FFF unless noted) */
+ alb:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><circle cx="40" cy="40" r="8"/><path d="M48 40h12M45 34l10-10M45 46l10 10M20 40h12"/></g><g fill="#fff"><circle cx="60" cy="40" r="4"/><circle cx="57" cy="22" r="4"/><circle cx="57" cy="58" r="4"/></g>',
+ nat:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 40h36M48 30l10 10-10 10M32 26v28"/></g>',
+ igw:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M24 58V30l16-10 16 10v28M32 58V40h16v18"/></g>',
+ ep:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><circle cx="40" cy="40" r="18"/><path d="M40 22v36M22 40h36"/></g><circle cx="40" cy="40" r="6" fill="#fff"/>',
+ r53:'<text x="40" y="52" text-anchor="middle" font-size="32" font-weight="700" style="fill:#fff">53</text>',
+ waf:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M40 18l20 7v14c0 12-9 20-20 23-11-3-20-11-20-23V25z"/><path d="M27 36h26M27 46h26M36 28v8M44 36v10M36 46v8"/></g>',
+ ec2:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect x="24" y="24" width="32" height="32"/><path d="M30 18v6M40 18v6M50 18v6M30 56v6M40 56v6M50 56v6M18 30h6M18 50h6M56 30h6M56 50h6"/></g>',
+ db:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="40" cy="25" rx="18" ry="7"/><path d="M22 25v30c0 4 8 7 18 7s18-3 18-7V25M22 40c0 4 8 7 18 7s18-3 18-7"/></g>',
+ logs:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><rect x="22" y="20" width="36" height="40" rx="3"/><path d="M30 32h20M30 40h20M30 48h12"/></g>',
+ role:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M22 46a18 18 0 0 1 36 0z"/><path d="M18 46h44M40 28v-6M34 30l-2-6M46 30l2-6"/></g>',
+ user:'<g fill="none" stroke="#fff" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><circle cx="40" cy="30" r="9"/><path d="M22 60c0-11 8-17 18-17s18 6 18 17"/></g>'
+};
+/* side: falsy = label below, 'l' = left, 't' = above, any other truthy = right.
+   A label below blocks every vertical line through the tile's column; move it aside instead. */
+function tile(id,cx,cy,color,g,l1,l2,side){
+  const x=cx-40,y=cy-40;let t;
+  if(side==='l')t=`<text class="lbl" x="${cx-56}" y="${cy-4}" text-anchor="end">${l1}</text><text class="sub" x="${cx-56}" y="${cy+18}" text-anchor="end">${l2||''}</text>`;
+  else if(side==='t')t=`<text class="lbl" x="${cx}" y="${cy-66}" text-anchor="middle">${l1}</text><text class="sub" x="${cx}" y="${cy-48}" text-anchor="middle">${l2||''}</text>`;
+  else if(side)t=`<text class="lbl" x="${cx+56}" y="${cy-4}">${l1}</text><text class="sub" x="${cx+56}" y="${cy+18}">${l2||''}</text>`;
+  else t=`<text class="lbl" x="${cx}" y="${cy+66}" text-anchor="middle">${l1}</text>`+(l2?`<text class="sub" x="${cx}" y="${cy+86}" text-anchor="middle">${l2}</text>`:'');
+  return `<g class="node" id="${id}"><rect class="tile" x="${x}" y="${y}" width="80" height="80" rx="6" fill="${color}" style="stroke:${color==='#ffffff'?'var(--line)':'transparent'}"/><g transform="translate(${x} ${y})">${G[g]}</g>${t}</g>`;
+}
+function defs(){return `<defs>
+ <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--line)"/></marker>
+ <marker id="ahot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--accent)"/></marker>
+ <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--ink)"/></marker>
+ <marker id="ahdeny" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M8 0V10" style="stroke:var(--sec);stroke-width:3"/></marker>
+ <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--sec)"/></marker></defs>`;}
+const awsTab=(x,y,t,cls)=>`<rect x="${x}" y="${y-13}" width="${t.length*10+34}" height="26" rx="4" style="fill:var(--bg)"/><text class="acct-t ${cls||''}" x="${x+10}" y="${y+6}">&#9729; ${t}</text>`;
+
+/* Markers live in one always-rendered svg. A marker inside a hidden slide (display:none)
+   does not paint, and duplicate ids resolve to the first one, so never put defs() in a slide. */
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true">${defs()}</svg>`);
+
+
+/* ---------- helpers for the IAM and release slides ---------- */
+G.branch=`<g ${W}><circle cx="28" cy="24" r="6"/><circle cx="28" cy="58" r="6"/><circle cx="54" cy="32" r="6"/><path d="M28 30v22M54 38c0 10-26 8-26 14"/></g>`;
+G.gcp=`<g ${W}><path d="M40 20l18 10v20L40 60 22 50V30z"/></g><circle cx="40" cy="40" r="6" fill="#fff"/>`;
+/* One chip per grant beside a role tile. items: [text, stripe colour, id, deny?]. Each chip is a
+   .node, so a Play step can light it; a deny or critical grant gets the red outline. */
+function chipRow(cy,items,x0=470){return items.map((t,i)=>{const y=cy-40+i*38;
+  return `<g class="node" id="${t[2]}"><rect class="chip" x="${x0}" y="${y}" width="360" height="30" rx="6"/>${t[3]?`<rect class="deny-chip" x="${x0}" y="${y}" width="360" height="30" rx="6"/>`:''}<rect x="${x0}" y="${y}" width="8" height="30" rx="3" fill="${t[1]}"/><text class="chiptx" x="${x0+20}" y="${y+21}">${t[0]}</text></g>`}).join('')}
+
+/* ---------- flow diagram ---------- */
+document.getElementById('flow').innerHTML = `
+ <rect class="acc sec" x="210" y="22" width="420" height="168" rx="14"/>${awsTab(226,22,'security-prod account (separate)','sec')}
+ <rect class="acc" x="20" y="222" width="810" height="484" rx="14"/>${awsTab(36,222,'Prod workload account')}
+ <rect class="grp" x="500" y="262" width="310" height="180" rx="10"/><text x="516" y="288" class="lbl" style="fill:#E7157B">Paymaster</text>
+ <rect class="chainbox" x="880" y="222" width="380" height="230" rx="14"/><text x="896" y="250" class="acct-t" style="fill:var(--chain)">&#9670; On chain</text>
+ <text x="1060" y="476" class="tag" text-anchor="middle">Outside AWS</text>
+ <path class="arr" id="a1" d="M140 440H220V340H296"/>
+ <path class="arr" id="a2" d="M380 372H450V540H536"/>
+ <path class="arr" id="a3" d="M380 384H430V670H916"/>
+ <path class="arr" id="a10" d="M380 356H470V500H916"/>
+ <path class="arr" id="a4" d="M340 296V140"/>
+ <path class="arr" id="a5" d="M380 340H536"/>
+ <path class="arr" id="a6" d="M620 340H696"/>
+ <path class="arr" id="a9" d="M740 296V70H350"/>
+ <path class="arr" id="a7" d="M780 340H916"/>
+ <path class="arr" id="a8" d="M1000 340H1116"/>
+ <path class="mon" d="M140 460H220V560H296"/>
+ <path class="mon" d="M380 575H536"/>
+ <path class="mon" d="M380 596H410V690H916"/>
+ <path class="mon" d="M880 690V545H916"/>
+ ${tile('nSched',100,450,'#E7157B','clock','EventBridge','Scheduler')}
+ ${tile('nEcs',340,340,'#ED7100','ecs','Keeper','ECS Fargate task')}
+ ${tile('nMon',340,560,'#ED7100','ecs','Monitor','ECS Fargate task')}
+ ${tile('nSsm',580,560,'#E7157B','ssm','Parameter Store','AWS Systems Manager')}
+ ${tile('nKms',300,100,'#DD344C','kms','AWS KMS','Keeper + paymaster keys',1)}
+ ${tile('nSqs',580,340,'#E7157B','sqs','Amazon SQS','FIFO queue')}
+ ${tile('nLam',740,340,'#ED7100','lambda','AWS Lambda','Checks, pays gas')}
+ ${tile('nSlack',960,520,'#ffffff','slack','Slack','Alerts + heartbeat',1)}
+ ${tile('nRpc',960,660,'#6b7385','rpc','RPC providers','Chain data',1)}
+ <text x="40" y="694" class="tag">dotted = monitor (own schedule)</text>
+ ${tile('nKd',960,340,'#4f5fb8','cube','KeeperDelegate','contract')}
+ ${tile('nTgt',1160,340,'#4f5fb8','target','Target','contract')}
+`;
+
+const steps=[
+ {n:['nSched','nEcs'],a:'a1',c:'Scheduler starts the keeper task on a fixed schedule.'},
+ {n:['nEcs','nSsm'],a:'a2',c:'The task reads its switches and secrets from Parameter Store.'},
+ {n:['nEcs','nRpc'],a:'a3',c:'The task reads chain state from the RPC providers.'},
+ {n:['nEcs','nKms'],a:'a4',c:'AWS KMS signs the keeper request. The key is in another AWS account. It never leaves KMS.'},
+ {n:['nEcs','nSqs'],a:'a5',c:'The task puts the signed request in the paymaster queue.'},
+ {n:['nEcs','nSlack'],a:'a10',c:'The task sends its heartbeat and any alerts to Slack. Then the task stops.'},
+ {n:['nSqs','nLam'],a:'a6',c:'The queue starts the Lambda. The Lambda checks the request again.'},
+ {n:['nLam','nKms'],a:'a9',c:'AWS KMS signs the transaction with the paymaster key. This key is also in the security account.'},
+ {n:['nLam','nKd'],a:'a7',c:'The Lambda sends the transaction to the keeper address. The Lambda pays the gas.'},
+ {n:['nKd'],a:null,c:'KeeperDelegate checks the keeper signature, the nonce and the deadline.'},
+ {n:['nKd','nTgt'],a:'a8',c:'KeeperDelegate calls the target contract. The caller is the keeper address.'}
+];
+const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* One player per Play slide. p prefixes the button and caption ids: '' for #play/#cap, 'n' for #nplay/#ncap,
+   'i' for #iplay/#icap, 'r' for #rplay/#rcap. A step is {n:[node ids], a:[arrow ids], c:'caption'};
+   n and a may be one id or empty. Push the return value to stops so a slide change stops the Play. */
+function player(svgId,p,steps,idle){
+  const svg=document.getElementById(svgId),cap=document.getElementById(p+'cap'),playB=document.getElementById(p+'play');
+  let cur=-1,timer=null;
+  (window.__players=window.__players||[]).push({svg:svgId,steps});
+  function show(i){
+    cur=Math.max(-1,Math.min(steps.length-1,i));
+    svg.querySelectorAll('.hot').forEach(e=>e.classList.remove('hot'));
+    if(cur<0){svg.classList.remove('playing');cap.innerHTML=idle;return}
+    svg.classList.add('playing');
+    const s=steps[cur];[].concat(s.n||[],s.a||[]).forEach(id=>{const e=document.getElementById(id);if(e)e.classList.add('hot')});
+    cap.innerHTML=`<b>${cur+1}/${steps.length}</b>${s.c}`;
+  }
+  function stop(){clearInterval(timer);timer=null;playB.innerHTML='&#9654; Play'}
+  playB.onclick=()=>{
+    if(timer){stop();return}
+    if(cur>=steps.length-1)show(-1);
+    show(cur+1);playB.innerHTML='&#10073;&#10073; Pause';
+    timer=setInterval(()=>{if(cur>=steps.length-1){stop();return}show(cur+1)},rm?4500:3200);
+  };
+  document.getElementById(p+'next').onclick=()=>{stop();show(cur+1)};
+  document.getElementById(p+'back').onclick=()=>{stop();show(cur-1)};
+  document.getElementById(p+'reset').onclick=()=>{stop();show(-1)};
+  return stop;
+}
+const stops=[player('flow','',steps.map(s=>({n:s.n,a:s.a?[s.a]:[],c:s.c})),'Press Play to see one keeper run, step by step.')];
+
+/* ---------- network diagram (slide "How traffic moves through the network") ----------
+   Same tile()/player() engine. Copy the commented section in the HTML, then:
+   document.getElementById('net').innerHTML=`<rect class="acc" .../> VPC box, subnet bands as .reg,
+     arrows with ids, port tags as <text class="tag">:5432</text> beside each arrow, tiles`;
+   const nsteps=[{n:['nnAlb','nnApp'],a:['nAlbApp'],c:'...'}];
+   stops.push(player('net','n',nsteps,'Press Play to follow traffic in and out of the VPC.'));
+*/
+
+/* ---------- accounts diagram ---------- */
+function chips(x,y,items){return items.map((t,i)=>`<rect class="chip" x="${x}" y="${y+i*38}" width="360" height="30" rx="6"/><rect x="${x}" y="${y+i*38}" width="8" height="30" rx="3" fill="${t[1]}"/><text class="chiptx" x="${x+20}" y="${y+i*38+21}">${t[0]}</text>`).join('')}
+const secItems=[['AWS KMS keys (keeper + paymaster)','#DD344C'],['IAM runtime roles','#DD344C'],['Lambda code signing','#DD344C'],['Key-use alerts','#E7157B']];
+const wlItems=[['EventBridge Scheduler','#E7157B'],['Amazon ECS tasks + ECR images','#ED7100'],['Parameter Store (switches, secrets)','#E7157B'],['Paymaster: SQS, DynamoDB, Lambda','#ED7100'],['Alarms + Slack alerts','#E7157B']];
+document.getElementById('accts').innerHTML = `
+ <rect class="repo" x="20" y="90" width="300" height="110" rx="10"/>
+ <text x="40" y="128" class="lbl">ops-security</text><text x="40" y="154" class="sub">Terraform</text><text x="40" y="180" class="sub">Keys, roles, code signing</text>
+ <rect class="repo" x="20" y="420" width="300" height="120" rx="10"/>
+ <text x="40" y="458" class="lbl">ops-tooling</text><text x="40" y="484" class="sub">Keeper code, paymaster,</text><text x="40" y="506" class="sub">KeeperDelegate, Terraform</text>
+ <path class="deploy" d="M320 145H392"/><text x="356" y="133" class="tag" text-anchor="middle">deploys</text>
+ <path class="deploy" d="M320 480H392"/><text x="356" y="468" class="tag" text-anchor="middle">deploys</text>
+
+ <rect class="acc sec" x="400" y="30" width="860" height="220" rx="14"/>${awsTab(416,30,'security-prod account','sec')}
+ <rect class="reg" x="420" y="60" width="400" height="172" rx="10"/><text x="440" y="88" class="regt">us-east-2 · primary</text>
+ ${chips(440,104,[['AWS KMS keys (keeper + paymaster)','#DD344C'],['IAM runtime roles','#DD344C'],['Code signing + key alerts','#DD344C']])}
+ <rect class="reg" x="840" y="60" width="400" height="172" rx="10"/><text x="860" y="88" class="regt">eu-west-1 · replica</text>
+ ${chips(860,104,[['AWS KMS key replicas','#DD344C'],['Same keys, same addresses','#DD344C']])}
+
+ <rect class="acc" x="400" y="320" width="860" height="320" rx="14"/>${awsTab(416,320,'Prod workload account')}
+ <rect class="reg" x="420" y="350" width="400" height="272" rx="10"/><text x="440" y="378" class="regt">us-east-2 · active</text>
+ ${chips(440,394,wlItems)}
+ <rect class="reg" x="840" y="350" width="400" height="272" rx="10"/><text x="860" y="378" class="regt">eu-west-1 · cold backup</text>
+ ${chips(860,394,[['Same stack as us-east-2','#ED7100'],['Runs in simulate mode','#E7157B'],['Turns active by a PR','#E7157B'],['Signs with eu-west-1 replicas','#DD344C']])}
+
+ <path class="uses" d="M620 346V256"/><text x="632" y="300" class="sub" style="fill:var(--sec)">uses keys</text>
+ <path class="uses" d="M1040 346V256"/><text x="1052" y="300" class="sub" style="fill:var(--sec)">uses replicas</text>
+`;
+
+/* ---------- slides ---------- */
+const slides=[...document.querySelectorAll('.slide')];let si=0;
+function go(i){si=Math.max(0,Math.min(slides.length-1,i));slides.forEach((s,k)=>s.classList.toggle('on',k===si));
+ document.getElementById('count').textContent=`${si+1} / ${slides.length}`;stops.forEach(f=>f());}
+document.getElementById('prev').onclick=()=>go(si-1);
+document.getElementById('fwd').onclick=()=>go(si+1);
+addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='PageDown')go(si+1);else if(e.key==='ArrowLeft'||e.key==='PageUp')go(si-1)});
+go(0);
+</script>

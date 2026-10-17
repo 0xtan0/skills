@@ -1,0 +1,9 @@
+# One line per edge found in the code: arrow id | what it is | source.
+# An edge you do not draw gets "-" and "left out: <reason>". check.py fails on an id that is not drawn.
+# The ids are invented. Use the ids of the arrows in your deck.
+nCdnAlb | CDN prefix list -> edge ALB :443                  | modules/edge/main.tf:56
+nAlbApp | edge ALB -> app tasks :8080                       | modules/app/main.tf:235
+nAppDb  | app tasks -> database :5432                       | modules/database/main.tf:88
+iPlan   | infra repo PR -> plan role (OIDC, pull/*/merge)   | modules/ci-roles/main.tf:67
+rMerge  | merge to main -> apply in the prod account        | .github/workflows/apply.yml:24
+-       | left out: bastion egress 443, same NAT path       | modules/bastion/main.tf:75
