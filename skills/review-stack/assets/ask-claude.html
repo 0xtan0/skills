@@ -1,0 +1,108 @@
+<!-- ask-claude: appended to the docs fragment by wrap_docs.py and build_artifact.py. Do not paste it by hand. -->
+<style>
+.sr-docs .d-ask{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.sr-docs .d-ask-open{align-self:flex-start;font:inherit;font-size:12.5px;cursor:pointer;border:1px dashed var(--d-muted);background:transparent;color:var(--d-muted);border-radius:999px;padding:3px 11px}
+.sr-docs .d-ask-open:hover,.sr-docs .d-ask-open[aria-expanded="true"]{border-style:solid;color:var(--d-ink)}
+.sr-docs .d-ask-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.sr-docs .d-ask-form[hidden]{display:none}
+.sr-docs .d-ask-form textarea{flex:1 1 280px;min-height:2.6em;resize:vertical;font:inherit;font-size:14px;padding:6px 9px;border:1px solid var(--d-line);border-radius:6px;background:var(--d-surface);color:var(--d-ink)}
+.sr-docs .d-ask-form button{font:inherit;font-size:13px;cursor:pointer;border:1px solid var(--d-ink);background:var(--d-ink);color:var(--d-surface);border-radius:6px;padding:6px 12px;white-space:nowrap}
+.sr-docs .d-ask-form button:disabled{opacity:.5;cursor:default}
+.sr-docs .d-ask-ctx{flex-basis:100%;font-size:12.5px;color:var(--d-muted)}
+.sr-docs .d-ask-note{font-size:12.5px;color:var(--d-muted);min-height:1em}
+.sr-docs .d-ask-note[data-kind="ok"]{color:var(--d-ink)}
+.sr-docs .d-ask-note[data-kind="err"]{color:var(--d-warn-ink,var(--d-ink))}
+</style>
+<script>
+/* Ask Claude: one comment thread per question, anchored on the section, answered by the session that watches
+   this page. Write-only by design: the claude.ai comment panel shows the thread and Claude's answer. */
+(function () {
+  var root = document.getElementById('doc-root');
+  if (!root || !window.claude || !window.claude.use) return;
+  var comments = null, boxes = [];
+  var REASON = {
+    writers_only: 'Only editors of this page can ask Claude.',
+    no_session: 'No Claude session watches this page now. Ask Claude in the session to watch it.',
+    off: 'Asking Claude is off in this view.'
+  };
+  function sectionTitle(sec) {
+    var h = sec.querySelector('h1, h2');
+    return h ? h.textContent.replace(/\s+/g, ' ').trim() : sec.id.replace(/^doc-/, '');
+  }
+  /* the item selected in the section's diagram, read from its detail panel */
+  function selection(sec) {
+    var h = sec.querySelector('.d-detail h3');
+    if (!h) return '';
+    var t = h.textContent.replace(/#\d+|before the stack|changed/g, '').replace(/\s+/g, ' ').trim();
+    return /^Select a /.test(t) ? '' : t;
+  }
+  function build(sec) {
+    var wrap = document.createElement('div');
+    wrap.className = 'd-ask';
+    wrap.hidden = true;
+    var open = document.createElement('button');
+    open.type = 'button'; open.className = 'd-ask-open'; open.textContent = 'Ask Claude about this';
+    open.setAttribute('aria-expanded', 'false');
+    var form = document.createElement('div');
+    form.className = 'd-ask-form'; form.hidden = true;
+    var ctx = document.createElement('div'); ctx.className = 'd-ask-ctx';
+    var q = document.createElement('textarea'); q.rows = 2;
+    q.setAttribute('aria-label', 'Your question about ' + sectionTitle(sec));
+    q.placeholder = 'Ask about "' + sectionTitle(sec) + '". Claude answers in a comment thread here.';
+    var send = document.createElement('button'); send.type = 'button'; send.textContent = 'Send to Claude';
+    var note = document.createElement('div'); note.className = 'd-ask-note'; note.setAttribute('aria-live', 'polite');
+    form.appendChild(ctx); form.appendChild(q); form.appendChild(send);
+    wrap.appendChild(open); wrap.appendChild(form); wrap.appendChild(note);
+    sec.appendChild(wrap);
+    function say(msg, kind) { note.textContent = msg; if (kind) note.dataset.kind = kind; else note.removeAttribute('data-kind'); }
+    function showCtx() { var s = selection(sec); ctx.textContent = s ? 'About the selected item: ' + s : ''; ctx.hidden = !s; }
+    open.addEventListener('click', function () {
+      var on = form.hidden;
+      form.hidden = !on; open.setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (on) { showCtx(); q.focus(); }
+    });
+    send.addEventListener('click', async function () {
+      var text = q.value.trim();
+      if (!text) { say('Write a question first.', 'err'); return; }
+      var sel = selection(sec);
+      var head = '[docs · ' + sectionTitle(sec) + (sec.id ? ' · #' + sec.id : '') + (sel ? ' · selected: ' + sel : '') + ']';
+      send.disabled = true; say('Sending…');
+      try {
+        var anchor = await comments.anchorFor(sec.querySelector('h1, h2') || sec);
+        await comments.sendToClaude({ anchor: anchor, text: (head + '\n\n' + text).slice(0, 3900) });
+        q.value = '';
+        say('Sent. Claude answers in the comment thread on this section. Open comments to read and reply.', 'ok');
+      } catch (e) {
+        var code = e && e.code;
+        if (code === 'claude_unavailable') say('Not sent: no Claude session can take it now. Nothing was posted.', 'err');
+        else if (code === 'consent_required') say('Not sent: allow this page to comment for you, then try again.', 'err');
+        else if (code === 'forbidden') say('Asking from this page is off for you here.', 'err');
+        else if (code === 'rate_limited') say('Too many questions at once. Wait a moment.', 'err');
+        else say('Not sent. Your question is still in the box.', 'err');
+      } finally { refresh(); }
+    });
+    return { wrap: wrap, send: send, say: say, note: note };
+  }
+  async function refresh() {
+    var state = 'off';
+    try { state = comments ? await comments.canSendToClaude() : 'off'; } catch (e) { state = 'off'; }
+    boxes.forEach(function (b) {
+      if (!comments || state === 'off') { b.wrap.hidden = true; return; }
+      b.wrap.hidden = false;
+      b.send.disabled = state !== 'available';
+      if (state !== 'available') b.say(REASON[state] || 'Asking Claude is not available now.');
+      else if (b.note.dataset.kind !== 'ok') b.say('');
+    });
+    return state;
+  }
+  (async function connect() {
+    try { comments = await window.claude.use('comments'); } catch (e) { comments = null; }
+    if (!comments || !('sendToClaude' in comments)) return;
+    root.querySelectorAll('section[id^="doc-"]').forEach(function (sec) { boxes.push(build(sec)); });
+    await refresh();
+    /* the watching session is learned after load: check again a few times, then on focus */
+    var n = 0, iv = setInterval(async function () { if (++n > 6 || (await refresh()) === 'available') clearInterval(iv); }, 5000);
+    window.addEventListener('focus', refresh);
+  })();
+})();
+</script>

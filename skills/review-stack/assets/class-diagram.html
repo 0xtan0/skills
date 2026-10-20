@@ -1,0 +1,368 @@
+<!-- Class diagram section for the review-stack explainer (phase 1).
+     Filled by scripts/class_diagram.py: do not edit the placeholders by hand.
+     Needs from the host fragment: the .sr-docs colour tokens (--d-surface, --d-bg, --d-sunk, --d-ink, --d-muted,
+     --d-line, --d-mono, --d-sans), the PR helpers .d-c<N> / .d-c0 (setting --pc and --pb), and the shared
+     classes .d-eyebrow, .d-prose, .d-scroll, .d-detail, .d-k, .d-tag, .d-muted, .d-dim. -->
+<section id="doc-classes">
+  <div class="d-eyebrow">Types</div>
+  <h2>Class diagram</h2>
+  <p class="d-prose">Each frame is a package. Each box is a class, an interface or a module, with its public members. A member row has the colour of the PR whose diff adds it. A <span class="d-cd-key-pill">&Delta; #N</span> pill shows a later PR that changes it. Grey means the type or member was in <code>dev</code> before the stack. Select a PR to dim what it does not touch. Select a box to show its relations and members below the diagram.</p>
+  <div class="d-cd-bar">
+    <div class="d-cdf" role="group" aria-label="Highlight one PR">
+      <button type="button" aria-pressed="true">All PRs</button>
+__CD_PR_BUTTONS__
+    </div>
+    <div class="d-cdz" role="group" aria-label="Zoom">
+      <button type="button" aria-pressed="true" data-z="fit">Fit</button>
+      <button type="button" aria-pressed="false" data-z="0.75">75%</button>
+      <button type="button" aria-pressed="false" data-z="1">100%</button>
+    </div>
+  </div>
+  <div class="d-cd-legend" aria-label="Relation key">
+    <span><svg width="44" height="14" aria-hidden="true"><path d="M2 7H30" class="d-cd-edge d-cd-inh"/><path d="M30 1L42 7L30 13Z" class="d-cd-mk-hollow"/></svg>extends</span>
+    <span><svg width="44" height="14" aria-hidden="true"><path d="M2 7H30" class="d-cd-edge d-cd-real"/><path d="M30 1L42 7L30 13Z" class="d-cd-mk-hollow"/></svg>implements</span>
+    <span><svg width="44" height="14" aria-hidden="true"><path d="M2 7H40" class="d-cd-edge d-cd-dep"/><path d="M32 2L41 7L32 12" class="d-cd-mk-open"/></svg>uses</span>
+    <span><svg width="44" height="14" aria-hidden="true"><path d="M2 7L9 2L16 7L9 12Z" class="d-cd-mk-fill"/><path d="M16 7H42" class="d-cd-edge d-cd-comp"/></svg>owns</span>
+    <span><svg width="44" height="14" aria-hidden="true"><path d="M2 7L9 2L16 7L9 12Z" class="d-cd-mk-hollow"/><path d="M16 7H42" class="d-cd-edge d-cd-agg"/></svg>holds</span>
+  </div>
+  <div class="d-scroll d-cd-scroll" id="doc-cdscroll"><svg id="doc-cdsvg" role="img" aria-label="UML class diagram of the stack: each frame is a package, each box a type, each member coloured by the PR that adds it."></svg></div>
+  <div class="d-detail" id="doc-cddetail" aria-live="polite"></div>
+
+<style>
+/* class diagram */
+.sr-docs .d-cd-bar{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between}
+.sr-docs .d-cdf,.sr-docs .d-cdz{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sr-docs .d-cdf button,.sr-docs .d-cdz button{font:inherit;font-size:12.5px;cursor:pointer;border:1px solid var(--d-line);background:var(--d-surface);color:var(--d-ink);border-radius:999px;padding:4px 11px;display:inline-flex;gap:6px;align-items:center}
+.sr-docs .d-cdf button[data-pr]::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--pc)}
+.sr-docs .d-cdf button[aria-pressed="true"],.sr-docs .d-cdz button[aria-pressed="true"]{border-color:var(--pc,var(--d-ink));background:var(--pb,var(--d-sunk));font-weight:600}
+.sr-docs .d-cd-legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--d-muted)}
+.sr-docs .d-cd-legend span{display:inline-flex;align-items:center;gap:6px}
+.sr-docs .d-cd-key-pill{font-family:var(--d-sans);font-size:11px;font-weight:700;border:1px solid var(--d-muted);border-radius:6px;padding:0 5px;white-space:nowrap}
+.sr-docs .d-cd-scroll{overflow:auto;max-height:80vh}
+.sr-docs .d-cd-scroll svg{display:block;min-width:0;max-width:none;width:auto;height:auto}
+.sr-docs .d-cd-tab{fill:var(--d-sunk);stroke:var(--d-muted);stroke-width:1}
+.sr-docs .d-cd-pkg{fill:var(--d-bg);stroke:var(--d-muted);stroke-width:1}
+.sr-docs .d-cd-pkgname{fill:var(--d-ink);font-family:var(--d-mono);font-size:12px;font-weight:700}
+.sr-docs .d-cd-cls{cursor:pointer}
+.sr-docs .d-cd-cls:focus{outline:none}
+.sr-docs .d-cd-box{fill:var(--d-surface);stroke:var(--d-muted);stroke-width:1.2}
+.sr-docs .d-cd-cls:focus-visible .d-cd-box,.sr-docs .d-cd-cls.d-sel .d-cd-box{stroke:var(--pc);stroke-width:3}
+.sr-docs .d-cd-cls.d-c0:focus-visible .d-cd-box,.sr-docs .d-cd-cls.d-c0.d-sel .d-cd-box{stroke:var(--d-ink)}
+.sr-docs .d-cd-stripe{fill:var(--pc)}
+.sr-docs .d-cd-st{fill:var(--d-muted);font-family:var(--d-mono);font-size:10.5px;font-style:italic}
+.sr-docs .d-cd-name{fill:var(--d-ink);font-family:var(--d-mono);font-size:13px;font-weight:700}
+.sr-docs .d-cd-abs{font-style:italic}
+.sr-docs .d-cd-div{stroke:var(--d-line);stroke-width:1}
+.sr-docs .d-cd-mbg{fill:var(--pb)}
+.sr-docs .d-cd-mbar{fill:var(--pc)}
+.sr-docs .d-cd-sig{fill:var(--d-ink);font-family:var(--d-mono);font-size:11.5px;white-space:pre}
+.sr-docs .d-cd-m.d-c0 .d-cd-sig{fill:var(--d-muted)}
+.sr-docs .d-cd-mdim{opacity:.3}
+.sr-docs .d-cd-pill{fill:var(--d-surface);stroke:var(--pc);stroke-width:1.2}
+.sr-docs .d-cd-pilltext{fill:var(--pc);font-family:var(--d-sans);font-size:10px;font-weight:700}
+.sr-docs .d-cd-edge{fill:none;stroke:var(--d-muted);stroke-width:1.3}
+.sr-docs .d-cd-real,.sr-docs .d-cd-dep{stroke-dasharray:6 4}
+.sr-docs .d-cd-edge.d-cd-on{stroke:var(--d-ink);stroke-width:2.2}
+.sr-docs .d-cd-mk-hollow{fill:var(--d-surface);stroke:var(--d-muted);stroke-width:1.3}
+.sr-docs .d-cd-mk-open{fill:none;stroke:var(--d-muted);stroke-width:1.3}
+.sr-docs .d-cd-mk-fill{fill:var(--d-muted);stroke:var(--d-muted);stroke-width:1.3}
+.sr-docs .d-cd-elabel{fill:var(--d-muted);font-family:var(--d-sans);font-size:10.5px;font-style:italic;paint-order:stroke;stroke:var(--d-bg);stroke-width:4px;stroke-linejoin:round}
+.sr-docs .d-cd-mlist{list-style:none;padding:0;font-size:13px}
+.sr-docs .d-cd-mlist li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+@media (prefers-reduced-motion: no-preference){.sr-docs .d-cd-cls,.sr-docs .d-cd-edge,.sr-docs .d-cd-m{transition:opacity .15s}}
+</style>
+<script type="application/json" id="doc-cd-data">__CD_DATA__</script>
+<script>
+(function () {
+  var root = document.getElementById('doc-root');
+  if (!root) return;
+  var svg = root.querySelector('#doc-cdsvg');
+  var scroller = root.querySelector('#doc-cdscroll');
+  var detail = root.querySelector('#doc-cddetail');
+  if (!svg) return;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  /* ---------- data (filled by scripts/class_diagram.py) ---------- */
+  var DATA = JSON.parse(root.querySelector('#doc-cd-data').textContent);
+  var C = DATA.classes, P = DATA.packages, E = DATA.edges;
+
+  /* ---------- shorten long signatures ---------- */
+  var MAXC = 34;
+  function shorten(sig) {
+    if (sig.length <= MAXC) return sig;
+    var open = sig.indexOf('('), close = sig.lastIndexOf(')');
+    if (open < 0 || close < open) return sig.slice(0, MAXC - 1) + '…';
+    var head = sig.slice(0, open + 1), ret = sig.slice(close + 1), params = sig.slice(open + 1, close).split(', ');
+    for (var keepRet = 1; keepRet >= 0; keepRet--) {
+      var tail = ')' + (keepRet ? ret : '');
+      for (var k = params.length - 1; k >= 0; k--) {
+        var cand = head + params.slice(0, k).concat(k < params.length ? ['…'] : []).join(', ') + tail;
+        if (cand.length <= MAXC) return cand;
+      }
+    }
+    return sig.slice(0, MAXC - 1) + '…';
+  }
+  Object.keys(C).forEach(function (id) {
+    C[id].m.forEach(function (m) { var full = m[3] || m[0]; m[3] = full; m[0] = shorten(full); });
+  });
+
+  /* ---------- measure ---------- */
+  var CW = 7.0, CWN = 8.0, CWS = 6.4, LH = 19, PADX = 12, MINW = 150, PILL = 50;
+  var HEAD_ST = 44, HEAD = 32, BODY_PAD = 6, EMPTY = 12;
+  var COL_GAP = 28, ROW_GAP = 30, LANE = 10, BAND_GAP = 50, PKG_GAP = 36, PKG_PAD = 16, TAB = 24, MARGIN = 20;
+
+  Object.keys(C).forEach(function (id) {
+    var c = C[id];
+    var w = Math.max(c.n.length * CWN, c.st ? (c.st.length + 2) * CWS : 0);
+    c.m.forEach(function (m) { w = Math.max(w, 8 + m[0].length * CW + m[2].length * (PILL + 4)); });
+    c.w = Math.ceil(Math.max(MINW, w + 2 * PADX));
+    c.h = (c.st ? HEAD_ST : HEAD) + (c.m.length ? c.m.length * LH + 2 * BODY_PAD : EMPTY);
+  });
+
+  /* ---------- gaps and lanes ---------- */
+  var pos = {};
+  P.forEach(function (p, pi) { p.grid.forEach(function (row, r) { row.forEach(function (id, ci) { if (id) pos[id] = { p: pi, r: r, c: ci }; }); }); });
+  var lanes = {};
+  E.forEach(function (e) {
+    var a = pos[e[0]], b = pos[e[1]];
+    if (!a || !b) throw new Error('class diagram: unknown id in ' + e.join(' '));
+    if (a.p === b.p && a.r === b.r) { e.mode = 'h'; return; }
+    if (a.p === b.p) { e.mode = 'v'; e.gap = 'p' + a.p + ':' + (b.r > a.r ? b.r - 1 : b.r); } /* the lane sits in the gap next to the target */
+    else { e.mode = 'v'; e.gap = 'b' + Math.min(P[a.p].band, P[b.p].band); }
+    (lanes[e.gap] = lanes[e.gap] || []).push(e);
+  });
+  function gapSize(key, base) { return base + (lanes[key] ? lanes[key].length : 0) * LANE; }
+
+  /* ---------- place packages and classes ---------- */
+  P.forEach(function (p, pi) {
+    var ncol = 0; p.grid.forEach(function (row) { ncol = Math.max(ncol, row.length); });
+    p.colW = []; p.rowH = [];
+    for (var ci = 0; ci < ncol; ci++) p.colW[ci] = 0;
+    p.grid.forEach(function (row, r) {
+      p.rowH[r] = 0;
+      row.forEach(function (id, ci) { if (id) { p.colW[ci] = Math.max(p.colW[ci], C[id].w); p.rowH[r] = Math.max(p.rowH[r], C[id].h); } });
+    });
+    p.rowGap = p.rowH.map(function (_, r) { return gapSize('p' + pi + ':' + r, ROW_GAP); });
+    p.w = 2 * PKG_PAD + p.colW.reduce(function (s, x) { return s + x; }, 0) + (ncol - 1) * COL_GAP;
+    p.h = TAB + 2 * PKG_PAD + p.rowH.reduce(function (s, x) { return s + x; }, 0) +
+      p.rowGap.slice(0, p.rowH.length - 1).reduce(function (s, x) { return s + x; }, 0);
+  });
+  var bands = [];
+  P.forEach(function (p) { (bands[p.band] = bands[p.band] || []).push(p); });
+  var y = MARGIN, W = 0;
+  bands.forEach(function (ps, bi) {
+    var x = MARGIN, bh = 0;
+    ps.forEach(function (p) { p.x = x; p.y = y; x += p.w + PKG_GAP; bh = Math.max(bh, p.h); });
+    W = Math.max(W, x - PKG_GAP + MARGIN);
+    ps.top = y; ps.bottom = y + bh;
+    y += bh + gapSize('b' + bi, BAND_GAP);
+  });
+  var H = y - gapSize('b' + (bands.length - 1), BAND_GAP) + MARGIN;
+  P.forEach(function (p) {
+    var ry = p.y + TAB + PKG_PAD;
+    p.rowY = [];
+    p.rowH.forEach(function (rh, r) { p.rowY[r] = ry; ry += rh + p.rowGap[r]; });
+    p.grid.forEach(function (row, r) {
+      var cx = p.x + PKG_PAD;
+      row.forEach(function (id, ci) {
+        if (id) { var c = C[id]; c.x = cx + (p.colW[ci] - c.w) / 2; c.y = p.rowY[r]; }
+        cx += p.colW[ci] + COL_GAP;
+      });
+    });
+  });
+
+  /* ---------- route edges ---------- */
+  function gapBounds(key) {
+    if (key[0] === 'b') { var b = Number(key.slice(1)); return [bands[b].bottom, bands[b + 1].top]; }
+    var parts = key.slice(1).split(':'), p = P[Number(parts[0])], r = Number(parts[1]);
+    return [p.rowY[r] + p.rowH[r], p.rowY[r + 1]];
+  }
+  /* spread the anchors on each box side, ordered by where the other end sits */
+  var sides = {};
+  function side(id, s, e, other) { var k = id + ':' + s; (sides[k] = sides[k] || []).push({ e: e, o: other }); }
+  E.forEach(function (e) {
+    var a = C[e[0]], b = C[e[1]];
+    if (e.mode === 'h') {
+      var right = b.x > a.x;
+      e.sa = right ? 'r' : 'l'; e.sb = right ? 'l' : 'r';
+    } else {
+      var down = b.y > a.y;
+      e.sa = down ? 'b' : 't'; e.sb = down ? 't' : 'b';
+    }
+    side(e[0], e.sa, e, b); side(e[1], e.sb, e, a);
+  });
+  Object.keys(sides).forEach(function (k) {
+    var id = k.split(':')[0], s = k.split(':')[1], c = C[id], list = sides[k];
+    var vert = s === 't' || s === 'b';
+    list.sort(function (u, v) { return vert ? (u.o.x + u.o.w / 2) - (v.o.x + v.o.w / 2) : (u.o.y - v.o.y); });
+    list.forEach(function (it, i) {
+      var f = (i + 1) / (list.length + 1);
+      var pt = vert ? [c.x + c.w * (list.length === 1 ? 0.5 : 0.2 + 0.6 * f), s === 't' ? c.y : c.y + c.h]
+                    : [s === 'l' ? c.x : c.x + c.w, c.y + Math.min(c.h, 60) * (list.length === 1 ? 0.5 : f)];
+      if (it.e[0] === id && it.e.sa === s) it.e.pa = pt; else it.e.pb = pt;
+    });
+  });
+  Object.keys(lanes).forEach(function (key) {
+    var list = lanes[key], gb = gapBounds(key);
+    list.sort(function (u, v) { return u.pa[0] - v.pa[0]; });
+    var span = gb[1] - gb[0], step = span / (list.length + 1);
+    list.forEach(function (e, i) { e.ly = Math.round(gb[0] + step * (i + 1)); });
+  });
+  E.forEach(function (e) {
+    var a = e.pa, b = e.pb;
+    if (e.mode === 'h') { var yy = (a[1] + b[1]) / 2; e.d = 'M' + a[0] + ' ' + yy + 'H' + b[0]; e.lx = (a[0] + b[0]) / 2; e.lyy = yy - 5; }
+    else if (Math.abs(a[0] - b[0]) < 1) { e.d = 'M' + a[0] + ' ' + a[1] + 'V' + b[1]; e.lx = a[0] + 6; e.lyy = e.ly - 4; e.la = 'start'; }
+    else { e.d = 'M' + a[0] + ' ' + a[1] + 'V' + e.ly + 'H' + b[0] + 'V' + b[1]; e.lx = (a[0] + b[0]) / 2; e.lyy = e.ly - 4; }
+  });
+
+  /* ---------- draw ---------- */
+  function el(tag, attrs, parent, text) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) if (attrs[k] !== undefined) n.setAttribute(k, attrs[k]);
+    if (text !== undefined) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  var defs = el('defs', {}, svg);
+  function marker(id, w, h, rx, ry, d, cls, orient) {
+    var m = el('marker', { id: id, markerWidth: w, markerHeight: h, refX: rx, refY: ry, orient: orient || 'auto', markerUnits: 'userSpaceOnUse' }, defs);
+    el('path', { d: d, 'class': cls }, m);
+  }
+  marker('doc-cd-tri', 14, 14, 13, 7, 'M1 1L13 7L1 13Z', 'd-cd-mk-hollow');
+  marker('doc-cd-open', 12, 12, 11, 6, 'M1 1L11 6L1 11', 'd-cd-mk-open');
+  marker('doc-cd-dia', 18, 12, 1, 6, 'M1 6L9 1L17 6L9 11Z', 'd-cd-mk-fill', 'auto');
+  marker('doc-cd-diao', 18, 12, 1, 6, 'M1 6L9 1L17 6L9 11Z', 'd-cd-mk-hollow');
+
+  var gPkg = el('g', {}, svg), gEdge = el('g', {}, svg), gCls = el('g', {}, svg), gLbl = el('g', {}, svg);
+  P.forEach(function (p) {
+    var tw = p.name.length * 7.4 + 20;
+    el('rect', { x: p.x, y: p.y, width: tw, height: TAB, rx: 3, 'class': 'd-cd-tab' }, gPkg);
+    el('rect', { x: p.x, y: p.y + TAB - 1, width: p.w, height: p.h - TAB + 1, rx: 3, 'class': 'd-cd-pkg' }, gPkg);
+    el('text', { x: p.x + 10, y: p.y + 16, 'class': 'd-cd-pkgname' }, gPkg, p.name);
+  });
+  E.forEach(function (e) {
+    var k = e[2];
+    e.node = el('path', {
+      d: e.d, 'class': 'd-cd-edge d-cd-' + k,
+      'marker-end': k === 'inh' || k === 'real' ? 'url(#doc-cd-tri)' : k === 'dep' ? 'url(#doc-cd-open)' : undefined,
+      'marker-start': k === 'comp' ? 'url(#doc-cd-dia)' : k === 'agg' ? 'url(#doc-cd-diao)' : undefined
+    }, gEdge);
+    if (e[3]) e.lnode = el('text', { x: e.lx, y: e.lyy, 'text-anchor': e.la || 'middle', 'class': 'd-cd-elabel' }, gLbl, e[3]);
+  });
+  function prsOf(c) {
+    var s = {}; if (c.pr) s[c.pr] = 1;
+    c.m.forEach(function (m) { if (m[1]) s[m[1]] = 1; m[2].forEach(function (p) { s[p] = 1; }); });
+    return Object.keys(s).map(Number);
+  }
+  Object.keys(C).forEach(function (id) {
+    var c = C[id];
+    c.prs = prsOf(c);
+    var g = el('g', { 'class': 'd-cd-cls d-c' + c.pr, tabindex: 0, role: 'button', 'aria-pressed': 'false', 'aria-label': (c.st ? c.st + ' ' : 'class ') + c.n }, gCls);
+    c.node = g;
+    el('rect', { x: c.x, y: c.y, width: c.w, height: c.h, rx: 4, 'class': 'd-cd-box' }, g);
+    el('rect', { x: c.x, y: c.y, width: c.w, height: 5, rx: 2, 'class': 'd-cd-stripe' }, g);
+    var cx = c.x + c.w / 2, hy = c.y + 5;
+    if (c.st) el('text', { x: cx, y: hy + 15, 'text-anchor': 'middle', 'class': 'd-cd-st' }, g, '«' + c.st + '»');
+    el('text', { x: cx, y: hy + (c.st ? 32 : 20), 'text-anchor': 'middle', 'class': 'd-cd-name' + (c.st === 'abstract' ? ' d-cd-abs' : '') }, g, c.n);
+    var top = c.y + (c.st ? HEAD_ST : HEAD);
+    el('line', { x1: c.x, x2: c.x + c.w, y1: top, y2: top, 'class': 'd-cd-div' }, g);
+    c.rows = [];
+    c.m.forEach(function (m, i) {
+      var ry = top + BODY_PAD + i * LH;
+      var rg = el('g', { 'class': 'd-cd-m d-c' + m[1] }, g);
+      el('title', {}, rg, (m[3] || m[0]) + '\n' + (m[1] ? 'added in #' + m[1] : 'in dev before the stack') + (m[2].length ? '; changed in #' + m[2].join(', #') : ''));
+      if (m[1]) el('rect', { x: c.x + 1, y: ry, width: c.w - 2, height: LH, 'class': 'd-cd-mbg' }, rg);
+      el('rect', { x: c.x + 1, y: ry + 2, width: 4, height: LH - 4, 'class': 'd-cd-mbar' }, rg);
+      el('text', { x: c.x + PADX, y: ry + 13.5, 'class': 'd-cd-sig' }, rg, m[0]);
+      var px = c.x + PADX + m[0].length * CW + 6;
+      m[2].forEach(function (p) {
+        var pg = el('g', { 'class': 'd-c' + p }, rg);
+        el('rect', { x: px, y: ry + 3, width: PILL, height: LH - 6, rx: 6, 'class': 'd-cd-pill' }, pg);
+        el('text', { x: px + PILL / 2, y: ry + 13, 'text-anchor': 'middle', 'class': 'd-cd-pilltext' }, pg, 'Δ #' + p);
+        px += PILL + 4;
+      });
+      c.rows.push({ node: rg, prs: [m[1]].concat(m[2]).filter(Boolean) });
+    });
+  });
+
+  /* ---------- interaction ---------- */
+  var prFilter = null, selected = null, zoom = 'fit';
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  var VERB = { inh: ['extends', 'is extended by'], real: ['implements', 'is implemented by'], comp: ['owns', 'is owned by'], agg: ['holds', 'is held by'], dep: ['uses', 'is used by'] };
+  function render() {
+    var rel = {};
+    E.forEach(function (e) {
+      var on = selected && (e[0] === selected || e[1] === selected);
+      if (on) { rel[e[0]] = 1; rel[e[1]] = 1; }
+      var prOk = !prFilter || (C[e[0]].prs.indexOf(prFilter) >= 0 && C[e[1]].prs.indexOf(prFilter) >= 0);
+      var show = selected ? on : prOk;
+      e.node.classList.toggle('d-dim', !show);
+      e.node.classList.toggle('d-cd-on', !!on);
+      if (e.lnode) e.lnode.classList.toggle('d-dim', !show);
+    });
+    Object.keys(C).forEach(function (id) {
+      var c = C[id];
+      var inPr = !prFilter || c.prs.indexOf(prFilter) >= 0;
+      var inSel = !selected || rel[id] || id === selected;
+      c.node.classList.toggle('d-dim', !(inPr && inSel));
+      c.node.classList.toggle('d-sel', id === selected);
+      c.node.setAttribute('aria-pressed', id === selected ? 'true' : 'false');
+      c.rows.forEach(function (r) { r.node.classList.toggle('d-cd-mdim', !!prFilter && inPr && r.prs.indexOf(prFilter) < 0); });
+    });
+    if (!selected) {
+      detail.className = 'd-detail';
+      detail.innerHTML = '<h3>Select a class</h3><div class="d-muted">Its package, its relations and its members show here, with the PR of each member.</div>';
+      return;
+    }
+    var s = C[selected], pkg = P[pos[selected].p].name;
+    var rels = [];
+    E.forEach(function (e) {
+      if (e[0] === selected) rels.push(VERB[e[2]][0] + ' <code>' + esc(C[e[1]].n) + '</code>' + (e[3] ? ' (' + esc(e[3]) + ')' : ''));
+      if (e[1] === selected) rels.push(VERB[e[2]][1] + ' <code>' + esc(C[e[0]].n) + '</code>' + (e[3] ? ' (' + esc(e[3]) + ')' : ''));
+    });
+    (s.also || []).forEach(function (a) { rels.push(esc(a)); });
+    function tag(p) { return p ? '<span class="d-c' + p + '"><span class="d-tag">#' + p + '</span></span>' : '<span class="d-c0"><span class="d-tag">before the stack</span></span>'; }
+    detail.className = 'd-detail d-c' + s.pr;
+    detail.innerHTML = '<h3><code>' + esc(s.n) + '</code> ' + tag(s.pr) + '</h3>' +
+      '<div><div class="d-k">Package</div><code>' + esc(pkg) + '</code><div class="d-k" style="margin-top:8px">What it is</div>' + esc(s.about || '') + '</div>' +
+      '<div><div class="d-k">Relations</div>' + (rels.length ? '<ul><li>' + rels.join('</li><li>') + '</li></ul>' : '<span class="d-muted">None drawn.</span>') + '</div>' +
+      '<div style="grid-column:1/-1"><div class="d-k">Members</div>' + (s.m.length ? '<ul class="d-cd-mlist">' + s.m.map(function (m) {
+        return '<li><code>' + esc(m[3] || m[0]) + '</code> ' + tag(m[1]) + m[2].map(function (p) { return ' <span class="d-c' + p + '"><span class="d-tag">changed #' + p + '</span></span>'; }).join('') + '</li>';
+      }).join('') + '</ul>' : '<span class="d-muted">No member changes in the stack.</span>') + '</div>';
+  }
+  Object.keys(C).forEach(function (id) {
+    var g = C[id].node;
+    function pick() { selected = selected === id ? null : id; render(); }
+    g.addEventListener('click', pick);
+    g.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pick(); }
+      if (ev.key === 'Escape') { selected = null; render(); }
+    });
+  });
+  root.querySelectorAll('.d-cdf button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      prFilter = b.hasAttribute('data-pr') ? Number(b.getAttribute('data-pr')) : null;
+      root.querySelectorAll('.d-cdf button').forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+      render();
+    });
+  });
+  function applyZoom() {
+    var avail = scroller.clientWidth || W;
+    var scale = zoom === 'fit' ? Math.min(1, avail / W) : Number(zoom);
+    svg.setAttribute('width', Math.round(W * scale));
+    svg.setAttribute('height', Math.round(H * scale));
+  }
+  root.querySelectorAll('.d-cdz button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      zoom = b.getAttribute('data-z');
+      root.querySelectorAll('.d-cdz button').forEach(function (o) { o.setAttribute('aria-pressed', o === b ? 'true' : 'false'); });
+      applyZoom();
+    });
+  });
+  if (window.ResizeObserver) new ResizeObserver(function () { if (zoom === 'fit') applyZoom(); }).observe(scroller);
+  applyZoom();
+  render();
+})();
+</script>
+</section>

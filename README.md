@@ -7,6 +7,7 @@ Agent skills for Claude Code. One folder per skill.
 | Skill | What it does |
 |---|---|
 | [infra-flow-deck](skills/infra-flow-deck/) | Builds a slide deck from infrastructure code: an animated request flow, the network path, IAM roles, the release path, a data-protection matrix, and accounts and repos. Every block and arrow is backed by a file and line in the code. |
+| [review-stack](skills/review-stack/) | Reviews a stack of pull requests as a stack: derives the order from base and head branches, explains it in an artifact (block diagram, UML class diagram coloured by PR, sequence diagram, one section per PR, Ask Claude on every section), runs one code review per PR, collects the reviewer's verdict on each finding in a split-view artifact, validates the flagged ones, and posts the approved comments. |
 
 ## Layout
 

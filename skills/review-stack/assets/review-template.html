@@ -1,0 +1,612 @@
+<title>__TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: one reading column; a sticky bar with counters and filters; the stack as a chain of chips; one section per PR with finding cards and a feedback strip on each. */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#17202a; --muted:#5a6573; --line:#d8dde4; --line-strong:#b9c1cc;
+  --accent:#1f5f8b; --accent-ink:#ffffff; --code-bg:#eceff4;
+  --sev-high:#b42318; --sev-high-bg:#fde8e7;
+  --sev-medium:#9c4309; --sev-medium-bg:#fcebdc;
+  --sev-low:#1f5f8b; --sev-low-bg:#e2edf6;
+  --sev-nit:#5a6573; --sev-nit-bg:#eaedf1;
+  --ok:#1d7544; --ok-bg:#e0f2e7; --warn:#845600; --warn-bg:#faefd4; --bad:#a3261b; --bad-bg:#fbe5e3;
+  --reply-bg:#edf3fa; --reply-line:#9cc0de;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-display:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d26; --ink:#e3e8ee; --muted:#9aa5b2; --line:#29333f; --line-strong:#3c4856;
+  --accent:#73b2e2; --accent-ink:#0f141a; --code-bg:#1f2834;
+  --sev-high:#ff8f85; --sev-high-bg:#3b1a18;
+  --sev-medium:#f3a566; --sev-medium-bg:#3a2513;
+  --sev-low:#82bae6; --sev-low-bg:#152839;
+  --sev-nit:#aab3bf; --sev-nit-bg:#222b35;
+  --ok:#72d39d; --ok-bg:#15301f; --warn:#e8c56c; --warn-bg:#342a11; --bad:#ff8f85; --bad-bg:#3b1a18;
+  --reply-bg:#132130; --reply-line:#2f5878;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#161d26; --ink:#e3e8ee; --muted:#9aa5b2; --line:#29333f; --line-strong:#3c4856;
+  --accent:#73b2e2; --accent-ink:#0f141a; --code-bg:#1f2834;
+  --sev-high:#ff8f85; --sev-high-bg:#3b1a18;
+  --sev-medium:#f3a566; --sev-medium-bg:#3a2513;
+  --sev-low:#82bae6; --sev-low-bg:#152839;
+  --sev-nit:#aab3bf; --sev-nit-bg:#222b35;
+  --ok:#72d39d; --ok-bg:#15301f; --warn:#e8c56c; --warn-bg:#342a11; --bad:#ff8f85; --bad-bg:#3b1a18;
+  --reply-bg:#132130; --reply-line:#2f5878;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:none;margin:0;min-width:0}
+h1,h2,h3,h4{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:1.85rem;font-weight:600}
+h2{font-size:1.3rem;font-weight:600}
+h3{font-size:1.05rem;font-weight:600}
+code{font-family:var(--font-mono);font-size:.86em;background:var(--code-bg);padding:.05em .3em;border-radius:3px;overflow-wrap:anywhere}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+header.top{padding-block:28px 12px;display:grid;gap:10px}
+header.top p{margin:0}
+.private{display:inline-flex;gap:6px;align-items:center;font-size:.82rem;color:var(--warn);background:var(--warn-bg);padding:3px 8px;border-radius:4px;width:fit-content}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding-block:10px;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.bar>*{min-width:0}
+@media (max-width:600px){.bar{position:static}}
+#prFilter{max-width:min(100%,260px)}
+section.block,.pr{grid-template-columns:minmax(0,1fr)}
+.counters{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.9rem}
+.counters b{font-variant-numeric:tabular-nums}
+.counter-pending b{color:var(--warn)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font:inherit;font-size:.82rem;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);padding:3px 10px;border-radius:999px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.chip[aria-pressed="false"]{opacity:.5;text-decoration:line-through}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+select,textarea,input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:4px}
+select{padding:3px 6px;font-size:.86rem;max-width:100%}
+.db-note{font-size:.84rem;padding:6px 10px;border-radius:4px;background:var(--warn-bg);color:var(--warn)}
+.db-note[data-kind="ok"]{background:var(--ok-bg);color:var(--ok)}
+
+section.block{padding-block:22px 4px;display:grid;gap:12px}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:620px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.76rem;letter-spacing:.05em;text-transform:uppercase}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tfoot td{font-weight:600}
+.zero{color:var(--line-strong)}
+
+.stack{display:flex;flex-wrap:wrap;gap:6px;align-items:center;list-style:none;margin:0;padding:0}
+.stack li{display:flex;align-items:center;gap:6px}
+.stack .node{display:inline-flex;flex-direction:column;border:1px solid var(--line-strong);background:var(--surface);border-radius:5px;padding:4px 9px;text-decoration:none;color:var(--ink);min-width:0}
+.stack .node b{font-family:var(--font-mono);font-size:.85rem}
+.stack .node span{font-size:.72rem;color:var(--muted)}
+.stack .branch{font-family:var(--font-mono);font-size:.78rem;color:var(--muted);border:1px dashed var(--line-strong);border-radius:5px;padding:4px 8px}
+.stack .arrow{color:var(--muted)}
+.howto{margin:0;padding-left:1.2em}
+.howto li{margin-block:2px}
+
+.pr{padding-block:30px 6px;display:grid;gap:14px;border-top:2px solid var(--line-strong);margin-top:22px;scroll-margin-top:110px}
+.pr-head{display:grid;gap:6px}
+.pr-meta{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.84rem;color:var(--muted)}
+.pr-meta code{font-size:.8rem}
+.pr-summary{margin:0}
+.sevcounts{display:flex;flex-wrap:wrap;gap:6px}
+.sev{display:inline-block;font-size:.74rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:3px;font-family:var(--font-body)}
+.sev-high{color:var(--sev-high);background:var(--sev-high-bg)}
+.sev-medium{color:var(--sev-medium);background:var(--sev-medium-bg)}
+.sev-low{color:var(--sev-low);background:var(--sev-low-bg)}
+.sev-nit{color:var(--sev-nit);background:var(--sev-nit-bg)}
+.dot.sev-high{background:var(--sev-high)}.dot.sev-medium{background:var(--sev-medium)}.dot.sev-low{background:var(--sev-low)}.dot.sev-nit{background:var(--sev-nit)}
+
+.panel{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:12px 14px;display:grid;gap:10px;min-width:0}
+.panel.prfb{background:transparent;border-style:dashed;border-color:var(--line-strong)}
+.findings{display:grid;gap:12px}
+.finding{scroll-margin-top:110px}
+.f-head{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.fid{font-family:var(--font-mono);font-weight:500;font-size:.9rem}
+.cat{font-size:.78rem;color:var(--muted);border:1px solid var(--line);padding:1px 7px;border-radius:3px}
+.conf{font-size:.76rem;color:var(--warn);background:var(--warn-bg);padding:1px 7px;border-radius:3px}
+.tstatus{font-size:.76rem;font-weight:600;padding:1px 7px;border-radius:3px;margin-left:auto}
+.tstatus[data-s="post"],.tstatus[data-s="validate"]{color:var(--ok);background:var(--ok-bg)}
+.tstatus[data-s="ignore"]{color:var(--bad);background:var(--bad-bg)}
+.tstatus[data-s="question"]{color:var(--warn);background:var(--warn-bg)}
+.f-title{font-family:var(--font-body);font-size:1rem;font-weight:600;line-height:1.4}
+.loc{font-size:.84rem}
+.loc code{background:transparent;padding:0;color:var(--muted)}
+dl.pef{margin:0;display:grid;grid-template-columns:5.2em minmax(0,1fr);gap:6px 12px}
+dl.pef dt{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--muted);padding-top:.2em}
+dl.pef dd{margin:0;min-width:0}
+@media (max-width:520px){dl.pef{grid-template-columns:minmax(0,1fr);gap:2px}dl.pef dd{margin-bottom:6px}}
+details.orig{font-size:.86rem;color:var(--muted)}
+details.orig summary{cursor:pointer;width:fit-content}
+details.orig dl{margin:8px 0 0;display:grid;gap:4px}
+details.orig dt{font-weight:600}
+details.orig dd{margin:0 0 6px;overflow-wrap:anywhere}
+
+.fb{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.fb-row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.fb label{font-size:.82rem;color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+.fb textarea{width:100%;min-height:3.2em;padding:6px 8px;resize:vertical;font-size:.92rem}
+.fb .toggle{color:var(--ink)}
+.fb .toggle input{width:16px;height:16px;accent-color:var(--accent)}
+.savestate{font-size:.78rem;color:var(--muted);margin-left:auto}
+.ask{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.ask textarea{flex:1 1 240px;min-height:2.4em;padding:6px 8px;resize:vertical;font-size:.92rem}
+.ask button{padding:6px 12px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);border-radius:4px;font:inherit;font-size:.86rem;cursor:pointer;white-space:nowrap}
+.ask button:disabled{opacity:.5;cursor:default}
+.asknote{font-size:.78rem;color:var(--muted);flex-basis:100%}
+.asknote[data-kind="err"]{color:var(--bad)}
+.savestate[data-kind="err"]{color:var(--bad)}
+.pending{font-size:.8rem;color:var(--warn);background:var(--warn-bg);padding:3px 8px;border-radius:3px;width:fit-content}
+.reply{border-left:3px solid var(--reply-line);background:var(--reply-bg);padding:8px 12px;border-radius:0 4px 4px 0;display:grid;gap:6px;font-size:.92rem}
+.reply .rh{font-size:.76rem;color:var(--muted);letter-spacing:.03em}
+.reply p{margin:0}
+.nomatch{font-size:.88rem;color:var(--muted);margin:0}
+footer{padding-block:30px 0;color:var(--muted);font-size:.84rem}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+/* Split view: the stack explanation (docs pane) beside the review (review pane). Without docs, only the review shows. */
+.docs-pane{display:none;min-width:0}
+.layout[data-has-docs="1"] .docs-pane,.layout[data-has-docs="1"] .review-pane{padding-top:44px}
+.layout[data-has-docs="1"][data-view="docs"] .docs-pane{display:block}
+.layout[data-has-docs="1"][data-view="docs"] .review-pane{display:none}
+.viewswitch{position:fixed;z-index:20;top:max(8px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));display:flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.viewswitch button{font:inherit;font-size:.8rem;padding:5px 11px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.viewswitch button+button{border-left:1px solid var(--line)}
+.viewswitch button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.viewswitch .only-wide{display:none}
+@media (min-width:1100px){
+  .viewswitch .only-wide{display:inline-block}
+  body.split-on{padding-bottom:0;overflow:hidden}
+  .layout[data-has-docs="1"][data-view="split"]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;height:100vh;height:100dvh}
+  .layout[data-has-docs="1"][data-view="split"] .docs-pane,
+  .layout[data-has-docs="1"][data-view="split"] .review-pane{display:block;overflow:auto;height:100%;position:relative;overscroll-behavior:contain;padding-bottom:48px}
+  .layout[data-has-docs="1"][data-view="split"] .docs-pane{border-right:1px solid var(--line);padding-right:16px}
+}
+</style>
+
+<div class="layout" id="layout" data-view="review" data-has-docs="__HASDOCS__">
+<aside class="docs-pane" id="docsPane" aria-label="Stack explanation">
+__DOCS__
+</aside>
+<div class="review-pane" id="reviewPane">
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">__REPO__ · code review</div>
+  <h1>__TITLE__</h1>
+  <p>This page gives the review findings for <b id="totalPrs">0</b> open PRs by <code>__AUTHOR__</code>. There are <b id="totalFindings">0</b> findings. Each PR has its own section. Each finding has a status, a comment box and a re-review switch.</p>
+  <div class="private">Private review. Nobody posted these findings to GitHub.</div>
+</header>
+
+<div class="bar" id="bar">
+  <div class="counters" aria-live="polite">
+    <span><b id="cComments">0</b> comments</span>
+    <span class="counter-pending"><b id="cPending">0</b> re-review requests pending</span>
+    <span><b id="cReplies">0</b> replies from Claude</span>
+    <span><b id="cTriaged">0</b> of <span id="cTotal">0</span> findings have a status</span>
+  </div>
+  <div class="filters" role="group" aria-label="Filters">
+    <span class="eyebrow">Severity</span>
+    <span id="sevChips" class="filters"></span>
+    <label class="eyebrow" for="prFilter">PR</label>
+    <select id="prFilter"><option value="all">All PRs</option></select>
+    <label class="eyebrow" for="fbFilter">Feedback</label>
+    <select id="fbFilter">
+      <option value="all">All findings</option>
+      <option value="open">Status Open only</option>
+      <option value="commented">With a comment</option>
+      <option value="rereview">Re-review pending</option>
+      <option value="replied">With a reply</option>
+    </select>
+  </div>
+  <div class="db-note" id="dbNote">The feedback store connects. Until then, the controls are read-only.</div>
+</div>
+
+<section class="block" id="overview">
+  <h2>Overview</h2>
+  <div class="scroll"><table id="ovTable"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+</section>
+
+<section class="block" id="stack">
+  <h2>Stack order</h2>
+  <p class="muted" style="margin:0">This order comes from the base branch of each PR. Merge from left to right. A PR on the second line is not in the chain.</p>
+  <ol class="stack" id="stackMain"></ol>
+  <ol class="stack" id="stackSide"></ol>
+</section>
+
+<section class="block" id="howto">
+  <h2>How to give feedback</h2>
+  <ol class="howto">
+    <li>Set a status on a finding: "Post as is" (post the suggestion), "Ignore", "Validate first" (Claude checks it against the code before it is posted) or "Question". The page saves it immediately.</li>
+    <li>Write a comment or a question in the box. The page saves it when you stop typing.</li>
+    <li>Turn on "Request re-review" to ask Claude to check the finding again.</li>
+    <li>Use the box at the top of each PR for a comment on the full PR.</li>
+    <li>To chat about one finding, write in "Ask Claude" and press "Send to Claude". Claude answers in a comment thread on that card. The chat does not change your saved status or comment.</li>
+    <li>Tell Claude in the session to read the feedback. Claude writes a reply, and the reply shows under the finding.</li>
+  </ol>
+</section>
+
+<main id="prs"></main>
+<footer>Each finding keeps the id, severity, file and line of the review. The text is in Simplified Technical English. Open "Original reviewer wording" to see the source text.</footer>
+</div>
+</div>
+</div>
+
+<script type="application/json" id="data">__DATA__</script>
+<script>
+(function(){
+  const DATA = JSON.parse(document.getElementById('data').textContent);
+  const SEV_ORDER = ['critical','high','medium','low','nit'];
+  const STATUSES = [['open','Open'],['post','Post as is'],['ignore','Ignore'],['validate','Validate first'],['question','Question']];
+  const $ = (s, r=document) => r.querySelector(s);
+  const el = (tag, attrs={}, kids=[]) => { const e=document.createElement(tag); for (const [k,v] of Object.entries(attrs)) { if (v==null) continue; if (k==='html') e.innerHTML=v; else if (k==='text') e.textContent=v; else if (k==='class') e.className=v; else e.setAttribute(k,v);} for (const c of [].concat(kids)) if (c!=null) e.append(c); return e; };
+
+  const allFindings = DATA.prs.flatMap(p => p.findings.map(f => ({...f, pr:p.pr})));
+  const sevs = SEV_ORDER.filter(s => allFindings.some(f => f.severity===s));
+  const TARGETS = {};
+  for (const p of DATA.prs) { TARGETS['pr-'+p.pr] = {kind:'pr', pr:p.pr, title:p.title}; for (const f of p.findings) TARGETS[f.id] = {kind:'finding', pr:p.pr, title:f.orig.title, loc:f.file+':'+f.line}; }
+  const countBy = (list) => { const c={}; for (const s of sevs) c[s]=0; for (const f of list) c[f.severity]=(c[f.severity]||0)+1; return c; };
+
+  $('#totalFindings').textContent = allFindings.length;
+  $('#cTotal').textContent = allFindings.length;
+
+  // Overview table
+  const ov = $('#ovTable');
+  ov.tHead.append(el('tr',{},[el('th',{text:'PR'}),el('th',{text:'Title'}),...sevs.map(s=>el('th',{class:'n',text:s})),el('th',{class:'n',text:'Total'}),el('th',{class:'n',text:'Comments'}),el('th',{class:'n',text:'Re-review'})]));
+  for (const p of DATA.prs) {
+    const c = countBy(p.findings);
+    ov.tBodies[0].append(el('tr',{},[
+      el('td',{class:'mono'},[el('a',{href:'#pr-'+p.pr,text:'#'+p.pr})]),
+      el('td',{text:p.title}),
+      ...sevs.map(s=>el('td',{class:'n'+(c[s]?'':' zero'),text:String(c[s])})),
+      el('td',{class:'n',text:String(p.findings.length)}),
+      el('td',{class:'n',id:'ovc-'+p.pr,text:'0'}),
+      el('td',{class:'n',id:'ovr-'+p.pr,text:'0'})
+    ]));
+  }
+  const tc = countBy(allFindings);
+  ov.tFoot.append(el('tr',{},[el('td',{text:'All'}),el('td',{text:DATA.prs.length+' PRs'}),...sevs.map(s=>el('td',{class:'n',text:String(tc[s])})),el('td',{class:'n',text:String(allFindings.length)}),el('td',{class:'n',id:'ovc-all',text:'0'}),el('td',{class:'n',id:'ovr-all',text:'0'})]));
+
+  $('#totalPrs').textContent=String(DATA.prs.length);
+  // Stack
+  const byBase = {}; for (const p of DATA.prs) byBase[p.base]=p;
+  const chain = []; let cur = byBase[DATA.root]; const seen=new Set();
+  while (cur && !seen.has(cur.pr)) { seen.add(cur.pr); chain.push(cur); cur = byBase[cur.head]; }
+  const short = p => p.head.replace(/^[a-z]+\//,'');
+  const node = p => el('a',{class:'node',href:'#pr-'+p.pr},[el('b',{text:'#'+p.pr}),el('span',{text:short(p)})]);
+  const sm = $('#stackMain');
+  sm.append(el('li',{},[el('span',{class:'branch',text:DATA.root})]));
+  for (const p of chain) sm.append(el('li',{},[el('span',{class:'arrow','aria-hidden':'true',text:'→'}),node(p)]));
+  const side = DATA.prs.filter(p=>!seen.has(p.pr));
+  const ss = $('#stackSide');
+  for (const p of side) { ss.append(el('li',{},[el('span',{class:'branch',text:p.base})])); ss.append(el('li',{},[el('span',{class:'arrow','aria-hidden':'true',text:'→'}),node(p)])); }
+
+  // Filters UI
+  const sevOn = new Set(sevs);
+  const chips = $('#sevChips');
+  for (const s of sevs) {
+    const b = el('button',{class:'chip',type:'button','aria-pressed':'true','data-sev':s},[el('span',{class:'dot sev-'+s}),document.createTextNode(s+' ('+tc[s]+')')]);
+    b.addEventListener('click',()=>{ if (sevOn.has(s)) sevOn.delete(s); else sevOn.add(s); b.setAttribute('aria-pressed',String(sevOn.has(s))); applyFilters(); });
+    chips.append(b);
+  }
+  const prSel = $('#prFilter');
+  for (const p of DATA.prs) prSel.append(el('option',{value:String(p.pr),text:'#'+p.pr+' · '+short(p)}));
+  prSel.addEventListener('change',applyFilters);
+  $('#fbFilter').addEventListener('change',applyFilters);
+
+  // Sections
+  const main = $('#prs');
+  const controls = []; // all inputs, enabled when db is ready
+  function feedbackStrip(target, isFinding) {
+    const wrap = el('div',{class:'fb'});
+    const row = el('div',{class:'fb-row'});
+    if (isFinding) {
+      const sel = el('select',{id:'st-'+target,disabled:''});
+      for (const [v,l] of STATUSES) sel.append(el('option',{value:v,text:l}));
+      sel.addEventListener('change',()=>save(target));
+      row.append(el('label',{for:'st-'+target},['Status',sel]));
+      controls.push(sel);
+    }
+    const rr = el('input',{type:'checkbox',id:'rr-'+target,disabled:''});
+    rr.addEventListener('change',()=>save(target));
+    row.append(el('label',{class:'toggle',for:'rr-'+target},[rr, isFinding?'Request re-review':'Re-review this PR']));
+    row.append(el('span',{class:'savestate',id:'sv-'+target}));
+    controls.push(rr);
+    const ta = el('textarea',{id:'cm-'+target,rows:'2',disabled:'',placeholder: isFinding?'Comment or question on '+target:'Comment or question on the full PR','aria-label':'Comment on '+target});
+    ta.addEventListener('input',()=>schedule(target));
+    ta.addEventListener('blur',()=>flush(target));
+    controls.push(ta);
+    // Chat about this one target with the Claude session that watches the page. It posts a comment thread on
+    // the card and never touches the saved status, comment or re-review above.
+    const q = el('textarea',{id:'aq-'+target,rows:'1',maxlength:'3000',placeholder:'Ask Claude about '+target+' (a chat thread, not saved as feedback)','aria-label':'Question for Claude on '+target});
+    const send = el('button',{type:'button',id:'ab-'+target,disabled:'',text:'Send to Claude'});
+    send.addEventListener('click',()=>askClaude(target, wrap));
+    const ask = el('div',{class:'ask',id:'ak-'+target,hidden:''},[q, send, el('span',{class:'asknote',id:'an-'+target})]);
+    wrap.append(row, ta, ask, el('div',{class:'pending',id:'pd-'+target,hidden:''}), el('div',{id:'rp-'+target}));
+    return wrap;
+  }
+  for (const p of DATA.prs) {
+    const c = countBy(p.findings);
+    const sec = el('section',{class:'pr',id:'pr-'+p.pr,'data-pr':String(p.pr)});
+    sec.append(el('div',{class:'pr-head'},[
+      el('div',{class:'eyebrow',text:'PR #'+p.pr}),
+      el('h2',{},[el('a',{href:p.url,target:'_blank',rel:'noopener',text:p.title})]),
+      el('div',{class:'pr-meta'},[
+        el('span',{},['head ',el('code',{text:p.head_sha.slice(0,12),title:p.head_sha})]),
+        el('span',{},['branch ',el('code',{text:p.head})]),
+        el('span',{},['base ',el('code',{text:p.base})]),
+        el('span',{},[el('a',{href:p.url,target:'_blank',rel:'noopener',text:'Open on GitHub'})])
+      ])
+    ]));
+    sec.append(el('p',{class:'pr-summary',html:p.summary}));
+    sec.append(el('div',{class:'sevcounts'},sevs.filter(s=>c[s]).map(s=>el('span',{class:'sev sev-'+s,text:c[s]+' '+s}))));
+    const prPanel = el('div',{class:'panel prfb'},[el('h3',{text:'Feedback on PR #'+p.pr}), feedbackStrip('pr-'+p.pr,false)]);
+    sec.append(prPanel);
+    const list = el('div',{class:'findings'});
+    for (const f of p.findings) {
+      const head = el('div',{class:'f-head'},[
+        el('span',{class:'fid',text:f.id}),
+        el('span',{class:'sev sev-'+f.severity,text:f.severity}),
+        el('span',{class:'cat',text:f.category}),
+        f.confidence ? el('span',{class:'conf',text:'Confidence: '+f.confidence}) : null,
+        el('span',{class:'tstatus',id:'ts-'+f.id,hidden:''})
+      ]);
+      const orig = el('details',{class:'orig'},[el('summary',{text:'Original reviewer wording'}),el('dl',{},[
+        el('dt',{text:'Title'}),el('dd',{text:f.orig.title}),
+        el('dt',{text:'Detail'}),el('dd',{text:f.orig.detail}),
+        el('dt',{text:'Failure scenario'}),el('dd',{text:f.orig.failure_scenario}),
+        el('dt',{text:'Suggested fix'}),el('dd',{text:f.orig.suggested_fix})
+      ])]);
+      const card = el('article',{class:'panel finding',id:'f-'+f.id,'data-sev':f.severity,'data-pr':String(p.pr),'data-id':f.id},[
+        head,
+        el('h3',{class:'f-title',html:f.title}),
+        el('div',{class:'loc'},[el('code',{text:f.file+':'+f.line})]),
+        el('dl',{class:'pef'},[el('dt',{text:'Problem'}),el('dd',{html:f.problem}),el('dt',{text:'Effect'}),el('dd',{html:f.effect}),el('dt',{text:'Fix'}),el('dd',{html:f.fix})]),
+        orig,
+        feedbackStrip(f.id,true)
+      ]);
+      list.append(card);
+    }
+    list.append(el('p',{class:'nomatch',id:'nm-'+p.pr,hidden:'',text:'No finding in this PR matches the filters.'}));
+    sec.append(list);
+    main.append(sec);
+  }
+
+  // State
+  const fb = new Map(), rp = new Map();
+  let db = null, uid = null, ready = false;
+  const timers = new Map(), chains = new Map();
+
+  function isPending(t){ const f=fb.get(t); if(!f||!f.rereview) return false; const r=rp.get(t); return !(r && r.updated_at && f.updated_at && r.updated_at >= f.updated_at); }
+  function applyFilters(){
+    const prv = prSel.value, fv = $('#fbFilter').value;
+    for (const sec of document.querySelectorAll('section.pr')) {
+      const pr = sec.dataset.pr; sec.hidden = (prv!=='all' && prv!==pr);
+      let shown = 0;
+      for (const card of sec.querySelectorAll('article.finding')) {
+        const id = card.dataset.id, f = fb.get(id);
+        let ok = sevOn.has(card.dataset.sev);
+        if (ok && fv==='open') ok = !f || !f.status || f.status==='open';
+        if (ok && fv==='commented') ok = !!(f && f.comment && f.comment.trim());
+        if (ok && fv==='rereview') ok = isPending(id);
+        if (ok && fv==='replied') ok = rp.has(id);
+        card.hidden = !ok; if (ok) shown++;
+      }
+      $('#nm-'+pr).hidden = shown>0;
+    }
+  }
+  function renderInline(parent, text){
+    const parts = String(text).split('`');
+    parts.forEach((s,i)=>{ if (!s) return; parent.append(i%2 ? el('code',{text:s}) : document.createTextNode(s)); });
+  }
+  function fmtTime(iso){ try { const d=new Date(iso); if (isNaN(d)) return ''; return d.toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); } catch(e){ return ''; } }
+  function renderTarget(t){
+    const f = fb.get(t)||{}, r = rp.get(t);
+    const st = $('#st-'+t), rr = $('#rr-'+t), cm = $('#cm-'+t);
+    const editing = document.activeElement===cm || timers.has(t);
+    if (st && document.activeElement!==st) st.value = f.status || 'open';
+    if (rr) rr.checked = !!f.rereview;
+    if (cm && !editing) cm.value = f.comment || '';
+    const ts = $('#ts-'+t);
+    if (ts) { const s = f.status && f.status!=='open' ? f.status : ''; ts.hidden = !s; ts.dataset.s = s; ts.textContent = s ? (STATUSES.find(x=>x[0]===s)||[s,s])[1] : ''; }
+    const pd = $('#pd-'+t); const pend = isPending(t);
+    pd.hidden = !pend; pd.textContent = pend ? 'Re-review requested. Claude has not replied yet.' : '';
+    const box = $('#rp-'+t); box.replaceChildren();
+    if (r && (r.body || r.verdict)) {
+      const d = el('div',{class:'reply'});
+      d.append(el('div',{class:'rh',text:'Claude reply'+(r.kind?' · '+r.kind:'')+(r.updated_at?' · '+fmtTime(r.updated_at):'')}));
+      if (r.verdict) { const p = el('p'); p.append(el('b',{text:'Verdict: '})); renderInline(p, r.verdict); d.append(p); }
+      for (const para of String(r.body||'').split(/\n\s*\n/)) { if (!para.trim()) continue; const p = el('p'); para.split('\n').forEach((ln,i)=>{ if(i) p.append(el('br')); renderInline(p, ln); }); d.append(p); }
+      box.append(d);
+    }
+    const sv = $('#sv-'+t);
+    if (sv && !sv.dataset.busy) sv.textContent = f.updated_at ? 'Saved '+fmtTime(f.updated_at) : '';
+  }
+  function refreshCounters(){
+    let comments=0, pending=0, triaged=0; const perC={}, perR={};
+    for (const [t,f] of fb) {
+      const pr = TARGETS[t] ? TARGETS[t].pr : f.pr;
+      if (f.comment && f.comment.trim()) { comments++; perC[pr]=(perC[pr]||0)+1; }
+      if (isPending(t)) { pending++; perR[pr]=(perR[pr]||0)+1; }
+      if (TARGETS[t] && TARGETS[t].kind==='finding' && f.status && f.status!=='open') triaged++;
+    }
+    let replies=0; for (const [t,r] of rp) if (r && (r.body||r.verdict)) replies++;
+    $('#cComments').textContent=comments; $('#cPending').textContent=pending; $('#cReplies').textContent=replies; $('#cTriaged').textContent=triaged;
+    for (const p of DATA.prs) { $('#ovc-'+p.pr).textContent=perC[p.pr]||0; $('#ovr-'+p.pr).textContent=perR[p.pr]||0; }
+    $('#ovc-all').textContent=comments; $('#ovr-all').textContent=pending;
+  }
+  function refreshAll(){ for (const t of Object.keys(TARGETS)) renderTarget(t); refreshCounters(); applyFilters(); }
+
+  function setSave(t, text, kind){ const sv=$('#sv-'+t); if(!sv) return; sv.textContent=text; if (kind) sv.dataset.kind=kind; else delete sv.dataset.kind; }
+  function schedule(t){ clearTimeout(timers.get(t)); timers.set(t, setTimeout(()=>{ timers.delete(t); save(t); }, 1200)); setSave(t,'Not saved yet'); }
+  function flush(t){ if (timers.has(t)) { clearTimeout(timers.get(t)); timers.delete(t); save(t); } }
+  function save(t){
+    if (!db || !ready) return;
+    const meta = TARGETS[t]; const st=$('#st-'+t), rr=$('#rr-'+t), cm=$('#cm-'+t);
+    const body = { target:t, pr:meta.pr, kind:meta.kind, title:meta.title,
+      status: st ? st.value : null, comment: cm ? cm.value : '', rereview: rr ? rr.checked : false,
+      updated_at: new Date().toISOString(), author: uid || null };
+    fb.set(t, body); renderTarget(t); refreshCounters();
+    const sv=$('#sv-'+t); sv.dataset.busy='1'; setSave(t,'Saving…');
+    const prev = chains.get(t) || Promise.resolve();
+    const next = prev.catch(()=>{}).then(()=>db.collection('feedback').doc(t).set(body))
+      .then(()=>{ delete sv.dataset.busy; setSave(t,'Saved '+fmtTime(body.updated_at)); })
+      .catch(e=>{ delete sv.dataset.busy;
+        const code = e && e.code;
+        if (code==='invalid_argument') { setSave(t,'Not saved: you have no write access to this page.','err'); setReadOnly('You can read this page, but you cannot save feedback here.'); }
+        else if (code==='quota_exceeded') setSave(t,'Not saved: the store is full.','err');
+        else setSave(t,'Not saved. Change the field again to retry.','err'); });
+    chains.set(t, next);
+  }
+  function setReadOnly(msg){ for (const c of controls) c.disabled = true; const n=$('#dbNote'); n.hidden=false; n.removeAttribute('data-kind'); n.textContent=msg; }
+  function enable(){ for (const c of controls) c.disabled = false; }
+
+  refreshAll();
+
+  // Send to Claude: one comment thread per question, anchored on the card, answered by the watching session.
+  let comments = null;
+  const askNote = (t, msg, kind) => { const n=$('#an-'+t); if (n) { n.textContent = msg; if (kind) n.dataset.kind = kind; else n.removeAttribute('data-kind'); } };
+  const ASK_REASON = {writers_only:'Only editors of this page can send to Claude.', no_session:'No Claude session watches this page right now. Ask Claude in the session to watch it.', off:'Sending to Claude is off in this view.'};
+  async function refreshAsk(){
+    let state = 'off';
+    try { state = comments ? await comments.canSendToClaude() : 'off'; } catch(e) { state = 'off'; }
+    for (const t of Object.keys(TARGETS)) {
+      const box = $('#ak-'+t), b = $('#ab-'+t); if (!box || !b) continue;
+      if (!comments || state === 'off') { box.hidden = true; continue; }
+      box.hidden = false; b.disabled = state !== 'available';
+      if (state !== 'available') askNote(t, ASK_REASON[state] || 'Sending to Claude is not available now.');
+      else if ($('#an-'+t).dataset.kind !== 'ok') askNote(t, '');
+    }
+    return state;
+  }
+  async function askClaude(t, wrap){
+    const q = $('#aq-'+t), b = $('#ab-'+t); const text = q.value.trim();
+    if (!text) { askNote(t, 'Write a question first.', 'err'); return; }
+    const T = TARGETS[t];
+    const head = T.kind === 'finding' ? '['+t+' · PR #'+T.pr+' · '+T.loc+'] '+T.title : '[PR #'+T.pr+'] '+T.title;
+    b.disabled = true; askNote(t, 'Sending…');
+    try {
+      const anchorEl = document.getElementById(T.kind==='finding' ? 'f-'+t : 'pr-'+T.pr) || wrap;
+      const anchor = await comments.anchorFor(anchorEl);
+      await comments.sendToClaude({anchor, text: (head+'\n\n'+text).slice(0, 3900)});
+      q.value = ''; askNote(t, 'Sent. Claude answers in the comment thread on this card. Open comments to read and reply.', 'ok');
+    } catch(e) {
+      const code = e && e.code;
+      if (code === 'claude_unavailable') askNote(t, 'Not sent: no Claude session can take it now. Nothing was posted.', 'err');
+      else if (code === 'consent_required') askNote(t, 'Not sent: allow this page to comment for you, then try again.', 'err');
+      else if (code === 'forbidden') askNote(t, 'Sending from this page is off for you here.', 'err');
+      else if (code === 'rate_limited') askNote(t, 'Too many sends. Wait a moment.', 'err');
+      else askNote(t, 'Not sent. Your question is still in the box.', 'err');
+    } finally { refreshAsk(); }
+  }
+  (async function connectComments(){
+    if (DATA.feedback === 'file' || !window.claude || !window.claude.use) return;
+    try { comments = await window.claude.use('comments'); } catch(e) { comments = null; }
+    if (!comments || !('sendToClaude' in comments)) { comments = null; return; }
+    await refreshAsk();
+    // Watching sessions are learned after load: check again a few times, then on focus.
+    let n = 0; const iv = setInterval(async () => { if (++n > 6 || (await refreshAsk()) === 'available') clearInterval(iv); }, 5000);
+    window.addEventListener('focus', refreshAsk);
+  })();
+
+  (async function connect(){
+    if (DATA.feedback === 'file') {
+      // No feedback store on this account: the reviewer writes feedback.md instead, so the page only shows findings.
+      for (const e of document.querySelectorAll('.fb, .prfb, #howto, .counters')) e.hidden = true;
+      const fv = $('#fbFilter'); if (fv) { fv.hidden = true; const l = document.querySelector('label[for="fbFilter"]'); if (l) l.hidden = true; }
+      const n = $('#dbNote'); n.hidden = false; n.removeAttribute('data-kind');
+      n.textContent = 'This page shows the findings only. Write your feedback in feedback.md (one block per finding id), then tell Claude in the session.';
+      return;
+    }
+    if (!window.claude || !window.claude.use) { setReadOnly('The feedback store is not available here. Open this page on claude.ai while you are signed in.'); return; }
+    let user = null;
+    try { [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]); } catch(e) { db = null; }
+    if (!db) { setReadOnly('The feedback store is not available in this view. Open this page on claude.ai while you are signed in.'); return; }
+    try { uid = user ? await user.id() : null; } catch(e) { uid = null; }
+    let canWrite = null; try { canWrite = user ? await user.can('data.write') : null; } catch(e) {}
+    db.collection('feedback').onSnapshot(snap => {
+      for (const ch of snap.docChanges()) { if (ch.type==='removed') fb.delete(ch.doc.id); else fb.set(ch.doc.id, ch.doc.data()); }
+      refreshAll();
+    }, e => { setReadOnly('The feedback store stopped. Reload the page.'); });
+    db.collection('replies').onSnapshot(snap => {
+      for (const ch of snap.docChanges()) { if (ch.type==='removed') rp.delete(ch.doc.id); else rp.set(ch.doc.id, ch.doc.data()); }
+      refreshAll();
+    }, e => {});
+    ready = true;
+    if (canWrite === false) { setReadOnly('You can read the feedback and the replies. You cannot save feedback here.'); return; }
+    enable();
+    const n=$('#dbNote'); n.dataset.kind='ok'; n.textContent='Connected. Your changes save to the shared feedback store.';
+    setTimeout(()=>{ n.hidden = true; }, 4000);
+  })();
+})();
+</script>
+
+<script>
+/* View switch and scroll sync between the docs pane (sections id="doc-pr-<N>") and the review pane (id="pr-<N>"). */
+(function(){
+  const L = document.getElementById('layout');
+  if (!L || L.dataset.hasDocs !== '1') return;
+  const docs = document.getElementById('docsPane'), rev = document.getElementById('reviewPane');
+  const wide = window.matchMedia('(min-width:1100px)');
+  const views = [['docs','Docs'],['split','Split'],['review','Review']];
+  const sw = document.createElement('div'); sw.className = 'viewswitch'; sw.setAttribute('role','group'); sw.setAttribute('aria-label','View');
+  const btns = {};
+  for (const [v,l] of views) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = l; b.dataset.view = v;
+    if (v === 'split') b.className = 'only-wide';
+    b.addEventListener('click', () => setView(v, true)); btns[v] = b; sw.append(b);
+  }
+  document.body.append(sw);
+  let view = 'split';
+  try { view = localStorage.getItem('review-stack-view') || 'split'; } catch(e) {}
+  function effective(){ return view === 'split' && !wide.matches ? 'review' : view; }
+  function setView(v, remember){
+    view = v; const e = effective(); L.dataset.view = e;
+    document.body.classList.toggle('split-on', e === 'split');
+    for (const k in btns) btns[k].setAttribute('aria-pressed', String(k === e));
+    if (remember) { try { localStorage.setItem('review-stack-view', v); } catch(err) {} }
+  }
+  wide.addEventListener('change', () => setView(view, false));
+  setView(view, false);
+  // Which PR is at the top of a pane, by its section id.
+  const topIn = (pane, sel) => {
+    const all = pane.querySelectorAll(sel); if (!all.length) return null;
+    // At the bottom the last sections cannot reach the top: the last one is then the current one.
+    if (pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 2) return all[all.length - 1];
+    const top = pane.getBoundingClientRect().top + 90; let cur = null;
+    for (const el of all) { if (el.getBoundingClientRect().top <= top) cur = el; else break; }
+    return cur;
+  };
+  const prOf = (el, prefix) => el ? el.id.slice(prefix.length) : null;
+  const pairs = [
+    {pane: docs, sel: '[id^="doc-pr-"]', prefix: 'doc-pr-', other: rev, target: n => document.getElementById('pr-'+n)},
+    {pane: rev, sel: 'section.pr[id^="pr-"]', prefix: 'pr-', other: docs, target: n => document.getElementById('doc-pr-'+n)}
+  ];
+  let driver = null, release = 0;
+  for (const p of pairs) {
+    let last = null, timer = 0;
+    p.pane.addEventListener('scroll', () => {
+      if (L.dataset.view !== 'split' || (driver && driver !== p.pane)) return;
+      driver = p.pane; clearTimeout(release); release = setTimeout(() => { driver = null; }, 300);
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = 0;
+        const n = prOf(topIn(p.pane, p.sel), p.prefix);
+        if (!n || n === last) return; last = n;
+        const t = p.target(n); if (!t) return;
+        const y = t.getBoundingClientRect().top - p.other.getBoundingClientRect().top + p.other.scrollTop - 8;
+        p.other.scrollTo({top: y, behavior: 'auto'});
+      }, 60);
+    }, {passive: true});
+  }
+})();
+</script>
